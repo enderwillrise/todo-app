@@ -6,16 +6,27 @@
   <title>Tasks</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: 'Inter', sans-serif;
-      background: #0f0f13;
-      color: #e8e8f0;
+      font-family: 'Press Start 2P', monospace;
+      background: #1a0a3e;
+      background-image:
+        radial-gradient(circle at 15% 20%, rgba(255,255,255,0.9) 1px, transparent 1px),
+        radial-gradient(circle at 40% 60%, rgba(255,255,255,0.7) 1px, transparent 1px),
+        radial-gradient(circle at 70% 15%, rgba(255,255,255,0.8) 1px, transparent 1px),
+        radial-gradient(circle at 85% 45%, rgba(255,255,255,0.6) 1px, transparent 1px),
+        radial-gradient(circle at 55% 80%, rgba(255,255,255,0.9) 1px, transparent 1px),
+        radial-gradient(circle at 25% 90%, rgba(255,255,255,0.7) 1px, transparent 1px),
+        radial-gradient(circle at 92% 75%, rgba(255,255,255,0.8) 1px, transparent 1px),
+        radial-gradient(circle at 5% 50%, rgba(255,255,255,0.6) 1px, transparent 1px);
+      background-size: 100% 100%;
+      color: #fff;
       min-height: 100vh;
       padding: 40px 20px 80px;
+      image-rendering: pixelated;
     }
 
     #particle-canvas {
@@ -26,141 +37,200 @@
     }
 
     .app {
-      max-width: 600px;
+      max-width: 620px;
       margin: 0 auto;
     }
 
+    /* ── Header ── */
     header {
-      margin-bottom: 32px;
+      margin-bottom: 36px;
+      text-align: center;
     }
 
     header h1 {
-      font-size: 2rem;
-      font-weight: 600;
-      letter-spacing: -0.5px;
-      color: #fff;
+      font-size: 1.5rem;
+      color: #ffd700;
+      text-shadow:
+        3px 3px 0 #a07000,
+        6px 6px 0 #5a3d00;
+      letter-spacing: 2px;
+      line-height: 1.4;
     }
 
     header p.subtitle {
-      margin-top: 4px;
-      font-size: 0.875rem;
-      color: #555568;
+      margin-top: 14px;
+      font-size: 0.45rem;
+      color: #aaa;
+      letter-spacing: 1px;
     }
 
+    /* ── Input row ── */
     .input-row {
       display: flex;
-      gap: 10px;
-      margin-bottom: 28px;
+      gap: 0;
+      margin-bottom: 32px;
     }
 
     #task-input {
       flex: 1;
-      background: #1c1c24;
-      border: 1px solid #2e2e3a;
-      border-radius: 12px;
-      padding: 14px 18px;
-      font-family: inherit;
-      font-size: 0.9375rem;
-      color: #e8e8f0;
+      background: #5c3d1e;
+      border: 4px solid #3a2510;
+      box-shadow:
+        inset 3px 3px 0 #7a5530,
+        inset -3px -3px 0 #2a1a08;
+      padding: 14px 16px;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 0.55rem;
+      color: #fff;
       outline: none;
-      transition: border-color 0.2s;
+      letter-spacing: 1px;
     }
 
-    #task-input::placeholder { color: #555568; }
-
+    #task-input::placeholder { color: #9a7a50; }
     #task-input:focus {
-      border-color: #6c63ff;
-      box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.15);
+      background: #6e4d28;
+      box-shadow:
+        inset 3px 3px 0 #8a6540,
+        inset -3px -3px 0 #3a2510,
+        0 0 0 2px #ffd700;
     }
 
     #add-btn {
-      background: #6c63ff;
+      background: #e83030;
+      border: 4px solid #8a0000;
+      box-shadow:
+        inset 3px 3px 0 #ff6060,
+        inset -3px -3px 0 #8a0000,
+        0 6px 0 #500000;
       color: #fff;
-      border: none;
-      border-radius: 12px;
-      padding: 14px 22px;
-      font-family: inherit;
-      font-size: 0.9375rem;
-      font-weight: 500;
+      padding: 14px 18px;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 0.5rem;
       cursor: pointer;
-      transition: background 0.15s, transform 0.1s;
+      letter-spacing: 1px;
+      transition: transform 0.08s, box-shadow 0.08s;
       white-space: nowrap;
     }
 
-    #add-btn:hover { background: #7b73ff; }
-    #add-btn:active { transform: scale(0.97); }
+    #add-btn:hover {
+      background: #ff4040;
+    }
 
+    #add-btn:active {
+      transform: translateY(4px);
+      box-shadow:
+        inset 3px 3px 0 #ff6060,
+        inset -3px -3px 0 #8a0000,
+        0 2px 0 #500000;
+    }
+
+    /* ── Task list ── */
     #task-list {
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 16px;
     }
 
+    /* ── Task card — Mario ? block ── */
     .task-card {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 16px;
-      background: #1c1c24;
-      border: 1px solid #2e2e3a;
-      border-radius: 14px;
+      background: #e8b800;
+      border: 4px solid #3a2800;
+      box-shadow:
+        inset 4px 4px 0 #ffe85c,
+        inset -4px -4px 0 #a07800,
+        0 8px 0 #3a2800;
       padding: 18px 20px;
-      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
-      animation: slide-in 250ms ease-out both;
+      animation: slide-in 200ms steps(4) both;
+      position: relative;
+      margin-bottom: 8px;
+    }
+
+    .task-card::before {
+      content: '?';
+      position: absolute;
+      left: -32px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 1rem;
+      color: #ffd700;
+      text-shadow: 2px 2px 0 #a07000;
+      opacity: 0.5;
     }
 
     .task-text {
-      font-size: 0.9375rem;
-      color: #e8e8f0;
-      line-height: 1.5;
+      font-size: 0.5rem;
+      color: #3a2800;
+      line-height: 2;
       flex: 1;
       word-break: break-word;
+      letter-spacing: 0.5px;
     }
 
+    /* ── Done button — green mushroom style ── */
     .done-btn {
-      background: transparent;
-      color: #6c63ff;
-      border: 1.5px solid #6c63ff;
-      border-radius: 20px;
-      padding: 7px 16px;
-      font-family: inherit;
-      font-size: 0.8125rem;
-      font-weight: 500;
+      background: #2ecc40;
+      border: 4px solid #1a5c20;
+      box-shadow:
+        inset 3px 3px 0 #5ef080,
+        inset -3px -3px 0 #1a5c20,
+        0 5px 0 #0a3010;
+      color: #fff;
+      padding: 8px 12px;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 0.4rem;
       cursor: pointer;
+      letter-spacing: 0.5px;
       white-space: nowrap;
-      transition: background 0.15s, color 0.15s, transform 0.1s;
       flex-shrink: 0;
+      transition: transform 0.08s, box-shadow 0.08s;
     }
 
     .done-btn:hover {
-      background: #6c63ff;
-      color: #fff;
+      background: #3ddd50;
     }
 
-    .done-btn:active { transform: scale(0.95); }
+    .done-btn:active {
+      transform: translateY(3px);
+      box-shadow:
+        inset 3px 3px 0 #5ef080,
+        inset -3px -3px 0 #1a5c20,
+        0 2px 0 #0a3010;
+    }
 
+    /* ── Empty state ── */
     #empty-state {
       text-align: center;
-      color: #555568;
-      font-size: 0.9375rem;
-      margin-top: 40px;
+      color: #aaa;
+      font-size: 0.45rem;
+      margin-top: 48px;
+      line-height: 2.5;
     }
 
+    /* ── Animations ── */
     @keyframes slide-in {
-      from { transform: translateY(16px); opacity: 0; }
+      from { transform: translateY(24px); opacity: 0; }
       to   { transform: translateY(0);    opacity: 1; }
     }
 
     @keyframes card-explode {
-      0%   { transform: scale(1);    opacity: 1; }
-      20%  { transform: scale(1.06); opacity: 1; }
-      100% { transform: scale(0.75); opacity: 0; }
+      0%   { transform: scale(1) translateY(0); opacity: 1; }
+      25%  { transform: scale(1.1) translateY(-8px); opacity: 1; }
+      100% { transform: scale(0.5) translateY(-20px); opacity: 0; }
     }
 
     .task-card.exploding {
-      animation: card-explode 320ms ease-in forwards;
+      animation: card-explode 350ms steps(6) forwards;
       pointer-events: none;
     }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #1a0a3e; }
+    ::-webkit-scrollbar-thumb { background: #ffd700; border: 2px solid #1a0a3e; }
   </style>
 </head>
 <body>
@@ -168,17 +238,17 @@
 
   <div class="app">
     <header>
-      <h1>Tasks</h1>
-      <p class="subtitle">Mark done to blow them up.</p>
+      <h1>TASK BLOCKS</h1>
+      <p class="subtitle">★ complete a task to blow it up ★</p>
     </header>
 
     <div class="input-row">
-      <input type="text" id="task-input" placeholder="Add a new task…" autocomplete="off">
-      <button id="add-btn">Add</button>
+      <input type="text" id="task-input" placeholder="enter task name..." autocomplete="off">
+      <button id="add-btn">+ ADD</button>
     </div>
 
     <div id="task-list"></div>
-    <p id="empty-state" style="display:none">No tasks yet. Add one above.</p>
+    <p id="empty-state" style="display:none">NO TASKS YET.<br>ADD ONE ABOVE!</p>
   </div>
 
   <script>
@@ -217,11 +287,11 @@
 
         const span = document.createElement('span');
         span.className = 'task-text';
-        span.textContent = task.text;
+        span.textContent = task.text.toUpperCase();
 
         const btn = document.createElement('button');
         btn.className = 'done-btn';
-        btn.textContent = '✓ Done';
+        btn.textContent = '★ DONE';
         btn.addEventListener('click', () => markDone(card, task.id));
 
         card.appendChild(span);
@@ -236,7 +306,7 @@
       setTimeout(() => {
         state.remove(id);
         render();
-      }, 320);
+      }, 350);
     }
 
     // ── Add Task ─────────────────────────────────────────────────────────────
@@ -255,7 +325,7 @@
     addBtn.addEventListener('click', addTask);
     input.addEventListener('keydown', e => { if (e.key === 'Enter') addTask(); });
 
-    // ── Particle Engine ──────────────────────────────────────────────────────
+    // ── Particle Engine — coins & block chunks ───────────────────────────────
     const canvas = document.getElementById('particle-canvas');
     const ctx    = canvas.getContext('2d');
     let particles = [];
@@ -267,28 +337,82 @@
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
 
-    const COLORS = ['#6c63ff', '#ff6584', '#43e97b', '#f7971e', '#ffd6ff', '#ffffff'];
+    // Coin particle
+    function drawCoin(ctx, p) {
+      ctx.save();
+      ctx.globalAlpha = p.alpha;
+      ctx.translate(p.x, p.y);
+      // Squish horizontally to simulate spinning coin
+      ctx.scale(Math.abs(Math.cos(p.rotation)), 1);
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(0, 0, p.size, 0, Math.PI * 2);
+      ctx.fill();
+      // Shine
+      ctx.fillStyle = 'rgba(255,255,200,0.6)';
+      ctx.beginPath();
+      ctx.arc(-p.size * 0.2, -p.size * 0.2, p.size * 0.35, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // Block chunk particle
+    function drawChunk(ctx, p) {
+      ctx.save();
+      ctx.globalAlpha = p.alpha;
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rotation);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+      // Bevel highlight
+      ctx.fillStyle = 'rgba(255,255,255,0.4)';
+      ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.25);
+      ctx.fillRect(-p.size / 2, -p.size / 2, p.size * 0.25, p.size);
+      ctx.restore();
+    }
+
+    const COIN_COLORS  = ['#ffd700', '#ffec6e', '#ffc200', '#ffe566'];
+    const CHUNK_COLORS = ['#e8b800', '#a07800', '#ffe85c', '#3a2800'];
 
     function explode(cardEl) {
       const rect = cardEl.getBoundingClientRect();
       const cx = rect.left + rect.width  / 2;
       const cy = rect.top  + rect.height / 2;
 
-      for (let i = 0; i < 42; i++) {
-        const angle = Math.random() * Math.PI * 2;
-        const speed = 3 + Math.random() * 9;
+      // Coins — shoot upward like hitting a ? block
+      for (let i = 0; i < 8; i++) {
+        const spread = (Math.random() - 0.5) * 4;
         particles.push({
-          x:        cx,
+          type:     'coin',
+          x:        cx + (Math.random() - 0.5) * rect.width * 0.6,
           y:        cy,
-          vx:       Math.cos(angle) * speed,
-          vy:       Math.sin(angle) * speed - 2.5,
-          size:     5 + Math.random() * 13,
-          aspect:   0.4 + Math.random() * 0.6,
-          color:    COLORS[Math.floor(Math.random() * COLORS.length)],
+          vx:       spread,
+          vy:       -(8 + Math.random() * 7),
+          size:     8 + Math.random() * 6,
+          color:    COIN_COLORS[Math.floor(Math.random() * COIN_COLORS.length)],
           alpha:    1,
           rotation: Math.random() * Math.PI * 2,
-          rotSpeed: (Math.random() - 0.5) * 0.25,
-          gravity:  0.28
+          rotSpeed: 0.15 + Math.random() * 0.2,
+          gravity:  0.4
+        });
+      }
+
+      // Block chunks — scatter outward
+      for (let i = 0; i < 18; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 3 + Math.random() * 8;
+        particles.push({
+          type:     'chunk',
+          x:        cx + (Math.random() - 0.5) * rect.width * 0.5,
+          y:        cy + (Math.random() - 0.5) * rect.height * 0.5,
+          vx:       Math.cos(angle) * speed,
+          vy:       Math.sin(angle) * speed - 3,
+          size:     6 + Math.random() * 10,
+          color:    CHUNK_COLORS[Math.floor(Math.random() * CHUNK_COLORS.length)],
+          alpha:    1,
+          rotation: Math.random() * Math.PI * 2,
+          rotSpeed: (Math.random() - 0.5) * 0.3,
+          gravity:  0.35
         });
       }
     }
@@ -302,17 +426,12 @@
         p.x        += p.vx;
         p.y        += p.vy;
         p.rotation += p.rotSpeed;
-        p.alpha    -= 0.016;
+        p.alpha    -= 0.018;
 
         if (p.alpha <= 0.01) { particles.splice(i, 1); continue; }
 
-        ctx.save();
-        ctx.globalAlpha = p.alpha;
-        ctx.translate(p.x, p.y);
-        ctx.rotate(p.rotation);
-        ctx.fillStyle = p.color;
-        ctx.fillRect(-p.size / 2, -p.size * p.aspect / 2, p.size, p.size * p.aspect);
-        ctx.restore();
+        if (p.type === 'coin') drawCoin(ctx, p);
+        else                   drawChunk(ctx, p);
       }
 
       requestAnimationFrame(animateParticles);
