@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tasks</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #0f0f13;
+      color: #e8e8f0;
+      min-height: 100vh;
+      padding: 40px 20px 80px;
+    }
+
+    #particle-canvas {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1000;
+    }
+
+    .app {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    header {
+      margin-bottom: 32px;
+    }
+
+    header h1 {
+      font-size: 2rem;
+      font-weight: 600;
+      letter-spacing: -0.5px;
+      color: #fff;
+    }
+
+    header p.subtitle {
+      margin-top: 4px;
+      font-size: 0.875rem;
+      color: #555568;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 28px;
+    }
+
+    #task-input {
+      flex: 1;
+      background: #1c1c24;
+      border: 1px solid #2e2e3a;
+      border-radius: 12px;
+      padding: 14px 18px;
+      font-family: inherit;
+      font-size: 0.9375rem;
+      color: #e8e8f0;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    #task-input::placeholder { color: #555568; }
+
+    #task-input:focus {
+      border-color: #6c63ff;
+      box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.15);
+    }
+
+    #add-btn {
+      background: #6c63ff;
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 14px 22px;
+      font-family: inherit;
+      font-size: 0.9375rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+      white-space: nowrap;
+    }
+
+    #add-btn:hover { background: #7b73ff; }
+    #add-btn:active { transform: scale(0.97); }
+
+    #task-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .task-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      background: #1c1c24;
+      border: 1px solid #2e2e3a;
+      border-radius: 14px;
+      padding: 18px 20px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+      animation: slide-in 250ms ease-out both;
+    }
+
+    .task-text {
+      font-size: 0.9375rem;
+      color: #e8e8f0;
+      line-height: 1.5;
+      flex: 1;
+      word-break: break-word;
+    }
+
+    .done-btn {
+      background: transparent;
+      color: #6c63ff;
+      border: 1.5px solid #6c63ff;
+      border-radius: 20px;
+      padding: 7px 16px;
+      font-family: inherit;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s, color 0.15s, transform 0.1s;
+      flex-shrink: 0;
+    }
+
+    .done-btn:hover {
+      background: #6c63ff;
+      color: #fff;
+    }
+
+    .done-btn:active { transform: scale(0.95); }
+
+    #empty-state {
+      text-align: center;
+      color: #555568;
+      font-size: 0.9375rem;
+      margin-top: 40px;
+    }
+
+    @keyframes slide-in {
+      from { transform: translateY(16px); opacity: 0; }
+      to   { transform: translateY(0);    opacity: 1; }
+    }
+
+    @keyframes card-explode {
+      0%   { transform: scale(1);    opacity: 1; }
+      20%  { transform: scale(1.06); opacity: 1; }
+      100% { transform: scale(0.75); opacity: 0; }
+    }
+
+    .task-card.exploding {
+      animation: card-explode 320ms ease-in forwards;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="particle-canvas"></canvas>
+
+  <div class="app">
+    <header>
+      <h1>Tasks</h1>
+      <p class="subtitle">Mark done to blow them up.</p>
+    </header>
+
+    <div class="input-row">
+      <input type="text" id="task-input" placeholder="Add a new task…" autocomplete="off">
+      <button id="add-btn">Add</button>
+    </div>
+
+    <div id="task-list"></div>
+    <p id="empty-state" style="display:none">No tasks yet. Add one above.</p>
+  </div>
+
+  <script>
+    // ── State ────────────────────────────────────────────────────────────────
+    const state = {
+      tasks: [],
+      load() {
+        try { this.tasks = JSON.parse(localStorage.getItem('todo-tasks')) || []; }
+        catch { this.tasks = []; }
+      },
+      save() {
+        localStorage.setItem('todo-tasks', JSON.stringify(this.tasks));
+      },
+      add(text) {
+        this.tasks.push({ id: crypto.randomUUID(), text, createdAt: Date.now() });
+        this.save();
+      },
+      remove(id) {
+        this.tasks = this.tasks.filter(t => t.id !== id);
+        this.save();
+      }
+    };
+
+    // ── Renderer ─────────────────────────────────────────────────────────────
+    const taskList   = document.getElementById('task-list');
+    const emptyState = document.getElementById('empty-state');
+
+    function render() {
+      taskList.innerHTML = '';
+      emptyState.style.display = state.tasks.length === 0 ? 'block' : 'none';
+
+      state.tasks.forEach(task => {
+        const card = document.createElement('div');
+        card.className = 'task-card';
+        card.dataset.id = task.id;
+
+        const span = document.createElement('span');
+        span.className = 'task-text';
+        span.textContent = task.text;
+
+        const btn = document.createElement('button');
+        btn.className = 'done-btn';
+        btn.textContent = '✓ Done';
+        btn.addEventListener('click', () => markDone(card, task.id));
+
+        card.appendChild(span);
+        card.appendChild(btn);
+        taskList.appendChild(card);
+      });
+    }
+
+    function markDone(card, id) {
+      explode(card);
+      card.classList.add('exploding');
+      setTimeout(() => {
+        state.remove(id);
+        render();
+      }, 320);
+    }
+
+    // ── Add Task ─────────────────────────────────────────────────────────────
+    const input  = document.getElementById('task-input');
+    const addBtn = document.getElementById('add-btn');
+
+    function addTask() {
+      const text = input.value.trim();
+      if (!text) return;
+      state.add(text);
+      input.value = '';
+      input.focus();
+      render();
+    }
+
+    addBtn.addEventListener('click', addTask);
+    input.addEventListener('keydown', e => { if (e.key === 'Enter') addTask(); });
+
+    // ── Particle Engine ──────────────────────────────────────────────────────
+    const canvas = document.getElementById('particle-canvas');
+    const ctx    = canvas.getContext('2d');
+    let particles = [];
+
+    function resizeCanvas() {
+      canvas.width  = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    const COLORS = ['#6c63ff', '#ff6584', '#43e97b', '#f7971e', '#ffd6ff', '#ffffff'];
+
+    function explode(cardEl) {
+      const rect = cardEl.getBoundingClientRect();
+      const cx = rect.left + rect.width  / 2;
+      const cy = rect.top  + rect.height / 2;
+
+      for (let i = 0; i < 42; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 3 + Math.random() * 9;
+        particles.push({
+          x:        cx,
+          y:        cy,
+          vx:       Math.cos(angle) * speed,
+          vy:       Math.sin(angle) * speed - 2.5,
+          size:     5 + Math.random() * 13,
+          aspect:   0.4 + Math.random() * 0.6,
+          color:    COLORS[Math.floor(Math.random() * COLORS.length)],
+          alpha:    1,
+          rotation: Math.random() * Math.PI * 2,
+          rotSpeed: (Math.random() - 0.5) * 0.25,
+          gravity:  0.28
+        });
+      }
+    }
+
+    function animateParticles() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.vy       += p.gravity;
+        p.x        += p.vx;
+        p.y        += p.vy;
+        p.rotation += p.rotSpeed;
+        p.alpha    -= 0.016;
+
+        if (p.alpha <= 0.01) { particles.splice(i, 1); continue; }
+
+        ctx.save();
+        ctx.globalAlpha = p.alpha;
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rotation);
+        ctx.fillStyle = p.color;
+        ctx.fillRect(-p.size / 2, -p.size * p.aspect / 2, p.size, p.size * p.aspect);
+        ctx.restore();
+      }
+
+      requestAnimationFrame(animateParticles);
+    }
+
+    // ── Boot ─────────────────────────────────────────────────────────────────
+    state.load();
+    render();
+    animateParticles();
+  </script>
+</body>
+</html>
