@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tasks</title>
+  <title>Task Blocks</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
@@ -14,124 +14,233 @@
       font-family: 'Press Start 2P', monospace;
       background: #1a0a3e;
       background-image:
-        radial-gradient(circle at 15% 20%, rgba(255,255,255,0.9) 1px, transparent 1px),
-        radial-gradient(circle at 40% 60%, rgba(255,255,255,0.7) 1px, transparent 1px),
-        radial-gradient(circle at 70% 15%, rgba(255,255,255,0.8) 1px, transparent 1px),
-        radial-gradient(circle at 85% 45%, rgba(255,255,255,0.6) 1px, transparent 1px),
-        radial-gradient(circle at 55% 80%, rgba(255,255,255,0.9) 1px, transparent 1px),
-        radial-gradient(circle at 25% 90%, rgba(255,255,255,0.7) 1px, transparent 1px),
-        radial-gradient(circle at 92% 75%, rgba(255,255,255,0.8) 1px, transparent 1px),
-        radial-gradient(circle at 5% 50%, rgba(255,255,255,0.6) 1px, transparent 1px);
-      background-size: 100% 100%;
+        radial-gradient(circle at 12% 18%, rgba(255,255,255,0.9) 1px, transparent 1px),
+        radial-gradient(circle at 38% 62%, rgba(255,255,255,0.7) 1px, transparent 1px),
+        radial-gradient(circle at 68% 14%, rgba(255,255,255,0.8) 1px, transparent 1px),
+        radial-gradient(circle at 84% 44%, rgba(255,255,255,0.6) 1px, transparent 1px),
+        radial-gradient(circle at 54% 82%, rgba(255,255,255,0.9) 1px, transparent 1px),
+        radial-gradient(circle at 24% 92%, rgba(255,255,255,0.7) 1px, transparent 1px),
+        radial-gradient(circle at 91% 76%, rgba(255,255,255,0.8) 1px, transparent 1px),
+        radial-gradient(circle at 6%  52%, rgba(255,255,255,0.6) 1px, transparent 1px),
+        radial-gradient(circle at 47% 32%, rgba(255,255,255,0.5) 1px, transparent 1px),
+        radial-gradient(circle at 77% 68%, rgba(255,255,255,0.7) 1px, transparent 1px);
       color: #fff;
       min-height: 100vh;
-      padding: 40px 20px 80px;
-      image-rendering: pixelated;
+      padding: 32px 20px 80px;
     }
 
     #particle-canvas {
       position: fixed;
       inset: 0;
       pointer-events: none;
-      z-index: 1000;
+      z-index: 100;
     }
 
-    .app {
-      max-width: 620px;
-      margin: 0 auto;
-    }
+    .app { max-width: 620px; margin: 0 auto; }
+    .hidden { display: none !important; }
 
-    /* ── Header ── */
-    header {
-      margin-bottom: 36px;
-      text-align: center;
-    }
-
+    /* ── Header ─────────────────────────────────────────────────────────── */
+    header { margin-bottom: 18px; text-align: center; }
     header h1 {
-      font-size: 1.5rem;
+      font-size: 1.4rem;
       color: #ffd700;
-      text-shadow:
-        3px 3px 0 #a07000,
-        6px 6px 0 #5a3d00;
+      text-shadow: 3px 3px 0 #a07000, 6px 6px 0 #5a3d00;
       letter-spacing: 2px;
-      line-height: 1.4;
     }
-
     header p.subtitle {
-      margin-top: 14px;
-      font-size: 0.45rem;
+      margin-top: 10px;
+      font-size: 0.38rem;
       color: #aaa;
       letter-spacing: 1px;
     }
 
-    /* ── Input row ── */
-    .input-row {
+    /* ── HUD Bar ─────────────────────────────────────────────────────────── */
+    #hud-bar {
       display: flex;
-      gap: 0;
-      margin-bottom: 32px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      background: #0d061f;
+      border: 4px solid #ffd700;
+      box-shadow: inset 3px 3px 0 #2a1a5a, inset -3px -3px 0 #050210, 0 6px 0 #a07000;
+      padding: 12px 16px;
+      margin-bottom: 10px;
     }
 
+    #hud-level { display: flex; flex-direction: column; gap: 5px; min-width: 80px; }
+    #hud-level-badge { font-size: 0.65rem; color: #ffd700; text-shadow: 2px 2px 0 #a07000; }
+    #hud-level-name  { font-size: 0.27rem; color: #ffec6e; line-height: 1.5; }
+
+    #hud-xp-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+    #hud-xp-bar-track {
+      width: 100%;
+      height: 12px;
+      background: #3a2800;
+      border: 2px solid #a07000;
+      box-shadow: inset 2px 2px 0 #1a1000;
+      overflow: hidden;
+    }
+    #hud-xp-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #ffc200, #ffd700, #ffec6e, #ffd700);
+      background-size: 300% 100%;
+      animation: xp-shimmer 2.5s linear infinite;
+      transition: width 0.5s steps(10);
+      width: 0%;
+    }
+    @keyframes xp-shimmer {
+      from { background-position: 100% 0%; }
+      to   { background-position: -100% 0%; }
+    }
+    #hud-xp-label { font-size: 0.27rem; color: #aaa; }
+
+    #hud-streak { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 64px; }
+    #hud-streak-icon  { font-size: 1rem; line-height: 1; }
+    #hud-streak-value { font-size: 0.65rem; color: #555; transition: color 0.3s; }
+    #hud-streak[data-active="true"] #hud-streak-value {
+      color: #2ecc40;
+      animation: streak-pulse 1.4s steps(2) infinite;
+    }
+    #hud-streak-label { font-size: 0.24rem; color: #777; }
+    @keyframes streak-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.65; } }
+
+    /* ── Stats Row ───────────────────────────────────────────────────────── */
+    #stats-row {
+      display: flex;
+      align-items: stretch;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .stat-block {
+      flex: 1;
+      background: #0d061f;
+      border: 3px solid #3a2870;
+      padding: 10px 4px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .stat-num {
+      font-size: 0.85rem;
+      color: #ffd700;
+      text-shadow: 2px 2px 0 #a07000;
+      transition: transform 0.15s steps(3);
+    }
+    .stat-num.pop { transform: scale(1.3); }
+    .stat-lbl { font-size: 0.26rem; color: #777; }
+    #analytics-toggle {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 0.3rem;
+      background: #0d061f;
+      border: 3px solid #3a2870;
+      color: #888;
+      padding: 8px 10px;
+      cursor: pointer;
+      white-space: nowrap;
+      letter-spacing: 0.5px;
+    }
+    #analytics-toggle:hover { background: #1e1050; color: #fff; }
+
+    /* ── Analytics Panel ─────────────────────────────────────────────────── */
+    #analytics-panel {
+      background: #0d061f;
+      border: 4px solid #3a2870;
+      box-shadow: inset 3px 3px 0 #100630;
+      padding: 18px 16px 14px;
+      margin-bottom: 14px;
+    }
+    #analytics-panel h3 {
+      font-size: 0.42rem;
+      color: #ffd700;
+      text-align: center;
+      margin-bottom: 18px;
+      letter-spacing: 2px;
+    }
+    #chart-container {
+      display: flex;
+      align-items: flex-end;
+      gap: 6px;
+      height: 80px;
+      margin-bottom: 16px;
+    }
+    .chart-col {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      height: 100%;
+      gap: 4px;
+    }
+    .chart-count { font-size: 0.22rem; color: #ffd700; min-height: 0.3rem; }
+    .chart-bar {
+      width: 100%;
+      background: #e8b800;
+      border: 2px solid #a07800;
+      box-shadow: inset 2px 2px 0 #ffe85c;
+      transition: height 0.4s steps(6);
+    }
+    .chart-bar.today { background: #2ecc40; border-color: #1a5c20; box-shadow: inset 2px 2px 0 #5ef080; }
+    .chart-bar.zero  { background: #2a1a5a; border-color: #3a2870; box-shadow: none; min-height: 4px; }
+    .chart-day { font-size: 0.22rem; color: #666; }
+    #affirmation-msg {
+      font-size: 0.34rem;
+      color: #ffec6e;
+      text-align: center;
+      line-height: 2;
+      border-top: 2px solid #3a2870;
+      padding-top: 12px;
+      letter-spacing: 0.5px;
+    }
+
+    /* ── Input row ───────────────────────────────────────────────────────── */
+    .input-row { display: flex; margin-bottom: 20px; }
     #task-input {
       flex: 1;
       background: #5c3d1e;
       border: 4px solid #3a2510;
-      box-shadow:
-        inset 3px 3px 0 #7a5530,
-        inset -3px -3px 0 #2a1a08;
+      box-shadow: inset 3px 3px 0 #7a5530, inset -3px -3px 0 #2a1a08;
       padding: 14px 16px;
       font-family: 'Press Start 2P', monospace;
-      font-size: 0.55rem;
+      font-size: 0.5rem;
       color: #fff;
       outline: none;
       letter-spacing: 1px;
     }
-
     #task-input::placeholder { color: #9a7a50; }
     #task-input:focus {
       background: #6e4d28;
-      box-shadow:
-        inset 3px 3px 0 #8a6540,
-        inset -3px -3px 0 #3a2510,
-        0 0 0 2px #ffd700;
+      box-shadow: inset 3px 3px 0 #8a6540, inset -3px -3px 0 #3a2510, 0 0 0 2px #ffd700;
     }
-
     #add-btn {
       background: #e83030;
       border: 4px solid #8a0000;
-      box-shadow:
-        inset 3px 3px 0 #ff6060,
-        inset -3px -3px 0 #8a0000,
-        0 6px 0 #500000;
+      box-shadow: inset 3px 3px 0 #ff6060, inset -3px -3px 0 #8a0000, 0 6px 0 #500000;
       color: #fff;
       padding: 14px 18px;
       font-family: 'Press Start 2P', monospace;
       font-size: 0.5rem;
       cursor: pointer;
       letter-spacing: 1px;
-      transition: transform 0.08s, box-shadow 0.08s;
       white-space: nowrap;
+      transition: transform 0.08s, box-shadow 0.08s;
     }
-
-    #add-btn:hover {
-      background: #ff4040;
-    }
-
+    #add-btn:hover { background: #ff4040; }
     #add-btn:active {
       transform: translateY(4px);
-      box-shadow:
-        inset 3px 3px 0 #ff6060,
-        inset -3px -3px 0 #8a0000,
-        0 2px 0 #500000;
+      box-shadow: inset 3px 3px 0 #ff6060, inset -3px -3px 0 #8a0000, 0 2px 0 #500000;
     }
 
-    /* ── Task list ── */
-    #task-list {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
+    /* ── Task list ───────────────────────────────────────────────────────── */
+    #task-list { display: flex; flex-direction: column; gap: 16px; }
 
-    /* ── Task card — Mario ? block ── */
     .task-card {
       display: flex;
       align-items: center;
@@ -139,95 +248,215 @@
       gap: 16px;
       background: #e8b800;
       border: 4px solid #3a2800;
-      box-shadow:
-        inset 4px 4px 0 #ffe85c,
-        inset -4px -4px 0 #a07800,
-        0 8px 0 #3a2800;
+      box-shadow: inset 4px 4px 0 #ffe85c, inset -4px -4px 0 #a07800, 0 8px 0 #3a2800;
       padding: 18px 20px;
-      animation: slide-in 200ms steps(4) both;
+      animation: slide-in 200ms ease-out both;
       position: relative;
       margin-bottom: 8px;
     }
-
     .task-card::before {
       content: '?';
       position: absolute;
-      left: -32px;
+      left: -26px;
       top: 50%;
       transform: translateY(-50%);
-      font-size: 1rem;
+      font-size: 0.85rem;
       color: #ffd700;
       text-shadow: 2px 2px 0 #a07000;
-      opacity: 0.5;
+      opacity: 0.4;
     }
-
     .task-text {
-      font-size: 0.5rem;
+      font-size: 0.48rem;
       color: #3a2800;
       line-height: 2;
       flex: 1;
       word-break: break-word;
       letter-spacing: 0.5px;
     }
-
-    /* ── Done button — green mushroom style ── */
     .done-btn {
       background: #2ecc40;
       border: 4px solid #1a5c20;
-      box-shadow:
-        inset 3px 3px 0 #5ef080,
-        inset -3px -3px 0 #1a5c20,
-        0 5px 0 #0a3010;
+      box-shadow: inset 3px 3px 0 #5ef080, inset -3px -3px 0 #1a5c20, 0 5px 0 #0a3010;
       color: #fff;
       padding: 8px 12px;
       font-family: 'Press Start 2P', monospace;
       font-size: 0.4rem;
       cursor: pointer;
-      letter-spacing: 0.5px;
       white-space: nowrap;
       flex-shrink: 0;
       transition: transform 0.08s, box-shadow 0.08s;
     }
-
-    .done-btn:hover {
-      background: #3ddd50;
-    }
-
+    .done-btn:hover { background: #3ddd50; }
     .done-btn:active {
       transform: translateY(3px);
-      box-shadow:
-        inset 3px 3px 0 #5ef080,
-        inset -3px -3px 0 #1a5c20,
-        0 2px 0 #0a3010;
+      box-shadow: inset 3px 3px 0 #5ef080, inset -3px -3px 0 #1a5c20, 0 2px 0 #0a3010;
     }
 
-    /* ── Empty state ── */
+    /* ── Empty state ─────────────────────────────────────────────────────── */
     #empty-state {
       text-align: center;
-      color: #aaa;
-      font-size: 0.45rem;
+      color: #555;
+      font-size: 0.38rem;
       margin-top: 48px;
       line-height: 2.5;
     }
 
-    /* ── Animations ── */
+    /* ── Card animations ─────────────────────────────────────────────────── */
     @keyframes slide-in {
-      from { transform: translateY(24px); opacity: 0; }
+      from { transform: translateY(20px); opacity: 0; }
       to   { transform: translateY(0);    opacity: 1; }
     }
-
     @keyframes card-explode {
-      0%   { transform: scale(1) translateY(0); opacity: 1; }
-      25%  { transform: scale(1.1) translateY(-8px); opacity: 1; }
-      100% { transform: scale(0.5) translateY(-20px); opacity: 0; }
+      0%   { transform: scale(1) translateY(0);   opacity: 1; }
+      25%  { transform: scale(1.1) translateY(-6px); opacity: 1; }
+      100% { transform: scale(0.4) translateY(-18px); opacity: 0; }
     }
-
     .task-card.exploding {
-      animation: card-explode 350ms steps(6) forwards;
+      animation: card-explode 350ms ease-in forwards;
       pointer-events: none;
     }
 
-    /* ── Scrollbar ── */
+    /* ── XP Floating Popup ───────────────────────────────────────────────── */
+    .xp-popup {
+      position: fixed;
+      pointer-events: none;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 0.48rem;
+      color: #ffd700;
+      text-shadow: 2px 2px 0 #a07000;
+      z-index: 500;
+      white-space: nowrap;
+      animation: xp-float 900ms steps(8) forwards;
+    }
+    @keyframes xp-float {
+      from { transform: translateY(0);   opacity: 1; }
+      to   { transform: translateY(-52px); opacity: 0; }
+    }
+
+    /* ── Level Up Overlay ────────────────────────────────────────────────── */
+    #levelup-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 2000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 22px;
+      background: rgba(10, 4, 30, 0.93);
+      animation: lu-flash 0.5s steps(3);
+    }
+    @keyframes lu-flash {
+      0%   { background: rgba(255, 215, 0, 0.65); }
+      33%  { background: rgba(10, 4, 30, 0.7); }
+      66%  { background: rgba(255, 215, 0, 0.4); }
+      100% { background: rgba(10, 4, 30, 0.93); }
+    }
+    #lu-stars {
+      font-size: 1.2rem;
+      animation: lu-bounce 0.5s steps(4) infinite alternate;
+    }
+    #lu-title {
+      font-size: 1.3rem;
+      color: #ffd700;
+      text-shadow: 4px 4px 0 #a07000, 8px 8px 0 #5a3d00;
+      animation: lu-bounce 0.4s steps(4) infinite alternate;
+      letter-spacing: 3px;
+    }
+    @keyframes lu-bounce {
+      from { transform: translateY(0) scale(1); }
+      to   { transform: translateY(-10px) scale(1.06); }
+    }
+    #lu-badge {
+      font-size: 0.6rem;
+      color: #3a2800;
+      background: #ffd700;
+      border: 4px solid #a07000;
+      box-shadow: 0 6px 0 #5a3d00;
+      padding: 10px 22px;
+    }
+    #lu-name {
+      font-size: 0.48rem;
+      color: #ffec6e;
+      letter-spacing: 2px;
+    }
+    #lu-btn {
+      margin-top: 8px;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 0.45rem;
+      background: #ffd700;
+      border: 4px solid #a07000;
+      box-shadow: 0 6px 0 #5a3d00;
+      color: #3a2800;
+      padding: 14px 24px;
+      cursor: pointer;
+      animation: lu-bounce 0.55s steps(4) 0.3s infinite alternate;
+    }
+    #lu-btn:hover { background: #ffec6e; }
+
+    /* ── Achievement Toast ───────────────────────────────────────────────── */
+    #ach-toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 1500;
+      background: #0d061f;
+      border: 4px solid #ffd700;
+      box-shadow: 0 8px 0 #a07000, inset 3px 3px 0 #2a1a5a;
+      padding: 14px 18px;
+      max-width: 290px;
+      pointer-events: none;
+      transform: translateY(130px);
+      opacity: 0;
+      transition: transform 0.2s steps(4), opacity 0.15s;
+    }
+    #ach-toast.up { transform: translateY(0); opacity: 1; }
+    #ach-name { font-size: 0.38rem; color: #ffd700; margin-bottom: 8px; }
+    #ach-desc { font-size: 0.28rem; color: #ccc; line-height: 1.8; }
+
+    /* ── Affirmation Toast ───────────────────────────────────────────────── */
+    #affirmation-toast {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-90px);
+      z-index: 1500;
+      background: #2ecc40;
+      border: 4px solid #1a5c20;
+      box-shadow: 0 6px 0 #0a3010, inset 3px 3px 0 #5ef080;
+      padding: 10px 20px;
+      font-size: 0.37rem;
+      color: #fff;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: transform 0.18s steps(3), opacity 0.15s;
+    }
+    #affirmation-toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    /* ── Combo Indicator ─────────────────────────────────────────────────── */
+    #combo-indicator {
+      position: fixed;
+      top: 44%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.2);
+      z-index: 800;
+      pointer-events: none;
+      opacity: 0;
+      transition: transform 0.14s steps(3), opacity 0.1s;
+      white-space: nowrap;
+      letter-spacing: 3px;
+      text-shadow: 3px 3px 0 rgba(0,0,0,0.6);
+    }
+    #combo-indicator.show {
+      transform: translate(-50%, -50%) scale(1);
+      opacity: 1;
+    }
+
+    /* ── Scrollbar ───────────────────────────────────────────────────────── */
     ::-webkit-scrollbar { width: 8px; }
     ::-webkit-scrollbar-track { background: #1a0a3e; }
     ::-webkit-scrollbar-thumb { background: #ffd700; border: 2px solid #1a0a3e; }
@@ -236,12 +465,75 @@
 <body>
   <canvas id="particle-canvas"></canvas>
 
+  <!-- Level Up Overlay -->
+  <div id="levelup-overlay" class="hidden">
+    <div id="lu-stars">★ ★ ★</div>
+    <div id="lu-title">LEVEL UP!</div>
+    <div id="lu-badge">LV.2</div>
+    <div id="lu-name">SUPER MARIO</div>
+    <button id="lu-btn">KEEP GOING! ▶</button>
+  </div>
+
+  <!-- Achievement Toast -->
+  <div id="ach-toast">
+    <div id="ach-name">★ ACHIEVEMENT!</div>
+    <div id="ach-desc"></div>
+  </div>
+
+  <!-- Affirmation Toast -->
+  <div id="affirmation-toast"></div>
+
+  <!-- Combo Indicator -->
+  <div id="combo-indicator"></div>
+
   <div class="app">
     <header>
       <h1>TASK BLOCKS</h1>
-      <p class="subtitle">★ complete a task to blow it up ★</p>
+      <p class="subtitle">★ smash tasks — earn xp — level up ★</p>
     </header>
 
+    <!-- HUD Bar -->
+    <div id="hud-bar">
+      <div id="hud-level">
+        <span id="hud-level-badge">LV.1</span>
+        <span id="hud-level-name">MUSHROOM KINGDOM</span>
+      </div>
+      <div id="hud-xp-wrap">
+        <div id="hud-xp-bar-track"><div id="hud-xp-bar-fill"></div></div>
+        <span id="hud-xp-label">0 / 100 XP</span>
+      </div>
+      <div id="hud-streak" data-active="false">
+        <span id="hud-streak-icon">—</span>
+        <span id="hud-streak-value">0</span>
+        <span id="hud-streak-label">DAY STREAK</span>
+      </div>
+    </div>
+
+    <!-- Stats Row -->
+    <div id="stats-row">
+      <div class="stat-block">
+        <span class="stat-num" id="stat-open">0</span>
+        <span class="stat-lbl">OPEN</span>
+      </div>
+      <div class="stat-block">
+        <span class="stat-num" id="stat-today">0</span>
+        <span class="stat-lbl">TODAY</span>
+      </div>
+      <div class="stat-block">
+        <span class="stat-num" id="stat-total">0</span>
+        <span class="stat-lbl">ALL TIME</span>
+      </div>
+      <button id="analytics-toggle">STATS ▼</button>
+    </div>
+
+    <!-- Analytics Panel -->
+    <div id="analytics-panel" class="hidden">
+      <h3>— RETROSPECTIVE —</h3>
+      <div id="chart-container"></div>
+      <p id="affirmation-msg"></p>
+    </div>
+
+    <!-- Input -->
     <div class="input-row">
       <input type="text" id="task-input" placeholder="enter task name..." autocomplete="off">
       <button id="add-btn">+ ADD</button>
@@ -252,34 +544,170 @@
   </div>
 
   <script>
-    // ── State ────────────────────────────────────────────────────────────────
+    // ── Levels ────────────────────────────────────────────────────────────────
+    const LEVELS = [
+      { level: 1,  name: 'MUSHROOM KINGDOM', threshold: 0    },
+      { level: 2,  name: 'SUPER MARIO',      threshold: 100  },
+      { level: 3,  name: 'FIRE FLOWER',      threshold: 300  },
+      { level: 4,  name: 'TANOOKI',          threshold: 650  },
+      { level: 5,  name: 'STAR POWER',       threshold: 1150 },
+      { level: 6,  name: 'YOSHI RIDER',      threshold: 1850 },
+      { level: 7,  name: 'KOOPA CRUSHER',    threshold: 2850 },
+      { level: 8,  name: 'BOWSER SLAYER',    threshold: 4250 },
+      { level: 9,  name: 'PRINCESS RESCUER', threshold: 6150 },
+      { level: 10, name: 'WORLD CHAMPION',   threshold: 8750 },
+    ];
+
+    function getLevel(xp) {
+      let cur = LEVELS[0];
+      for (const l of LEVELS) { if (xp >= l.threshold) cur = l; else break; }
+      return cur;
+    }
+
+    // ── Achievements ──────────────────────────────────────────────────────────
+    const ACHIEVEMENTS = {
+      first_coin:      { name: 'FIRST COIN!',     desc: 'You completed your very first task!' },
+      coin_rush:       { name: 'COIN RUSH',        desc: '5 tasks crushed in a single day!' },
+      fire_power:      { name: 'FIRE POWER',       desc: '3-day streak! You\'re heating up!' },
+      star_man:        { name: 'STAR MAN',         desc: '7-day streak! Totally invincible!' },
+      speed_runner:    { name: 'SPEED RUNNER',     desc: '3-task combo! Lightning fast!' },
+      combo_king:      { name: 'COMBO KING',       desc: 'x5 combo achieved! Legendary!' },
+      castle_cleared:  { name: 'CASTLE CLEARED',   desc: '25 total tasks destroyed!' },
+      world_8_1:       { name: 'WORLD 8-1',        desc: '100 tasks! You\'re unstoppable!' },
+      unstoppable:     { name: 'UNSTOPPABLE',      desc: '30-day streak. Pure dedication.' },
+      level_up_legend: { name: 'LEVEL UP LEGEND',  desc: 'Reached Level 5: Star Power!' },
+    };
+
+    // ── Affirmations ──────────────────────────────────────────────────────────
+    const AFFIRMATIONS = [
+      "IT'S-A ME, PRODUCTIVITY!",
+      "WAHOO! TASK DESTROYED!",
+      "PRINCESS APPROVED!",
+      "COIN COLLECTED! KEEP GOING!",
+      "BOWSER WOULD BE SCARED!",
+      "ANOTHER BLOCK SMASHED!",
+      "YOU'RE ON FIRE!",
+      "LEVEL GRINDER DETECTED!",
+      "MUSHROOM POWER ACTIVATED!",
+      "LAKITU IS IMPRESSED!",
+      "TOAD SAYS: THANK YOU!",
+      "WORLD RECORD PACE!",
+      "POW BLOCK INCOMING!",
+      "1-UP ENERGY FOUND!",
+    ];
+    let affirmIdx = 0;
+
+    // ── Utils ─────────────────────────────────────────────────────────────────
+    function todayStr() { return new Date().toISOString().slice(0, 10); }
+
+    // ── Gamification State ────────────────────────────────────────────────────
+    const DEFAULT_G = {
+      xp: 0, level: 1, streak: 0,
+      lastActiveDate: null, lastCompletionTime: null, currentCombo: 0,
+      dailyHistory: {}, totalCompleted: 0, unlockedAchievements: []
+    };
+    let g = { ...DEFAULT_G };
+
+    function loadG() {
+      try {
+        const s = JSON.parse(localStorage.getItem('todo-gamification'));
+        if (s) g = { ...DEFAULT_G, ...s };
+      } catch {}
+      checkStreakReset();
+    }
+
+    function saveG() {
+      // prune history older than 8 days
+      const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 8);
+      for (const k of Object.keys(g.dailyHistory))
+        if (new Date(k) < cutoff) delete g.dailyHistory[k];
+      localStorage.setItem('todo-gamification', JSON.stringify(g));
+    }
+
+    function checkStreakReset() {
+      if (!g.lastActiveDate) return;
+      const diff = Math.round(
+        (new Date(todayStr()) - new Date(g.lastActiveDate)) / 86400000
+      );
+      if (diff > 1) g.streak = 0;
+    }
+
+    function calcXP(streak, combo) {
+      const base  = 30;
+      const sMult = streak >= 30 ? 2.5 : streak >= 14 ? 2.0 : streak >= 7 ? 1.5 : streak >= 3 ? 1.2 : 1.0;
+      const cMult = combo  >= 5  ? 2.5 : combo  === 4 ? 2.0 : combo  === 3 ? 1.6 : combo  === 2 ? 1.3 : 1.0;
+      return Math.round(base * sMult * cMult);
+    }
+
+    function updateCombo() {
+      const now = Date.now();
+      if (g.lastCompletionTime && (now - g.lastCompletionTime) < 20000)
+        g.currentCombo++;
+      else
+        g.currentCombo = 1;
+      g.lastCompletionTime = now;
+      return g.currentCombo;
+    }
+
+    function awardXP(amount) {
+      const oldLevel = getLevel(g.xp);
+      g.xp += amount;
+      const newLevel = getLevel(g.xp);
+      g.level = newLevel.level;
+      return { leveledUp: newLevel.level > oldLevel.level, newLevel };
+    }
+
+    function updateStreak() {
+      const today = todayStr();
+      if (g.lastActiveDate !== today) { g.streak++; g.lastActiveDate = today; }
+    }
+
+    function updateDailyHistory() {
+      const today = todayStr();
+      g.dailyHistory[today] = (g.dailyHistory[today] || 0) + 1;
+    }
+
+    function checkAchievements() {
+      const todayCount = g.dailyHistory[todayStr()] || 0;
+      const checks = [
+        { id: 'first_coin',      cond: g.totalCompleted === 1 },
+        { id: 'coin_rush',       cond: todayCount >= 5 },
+        { id: 'fire_power',      cond: g.streak >= 3 },
+        { id: 'star_man',        cond: g.streak >= 7 },
+        { id: 'speed_runner',    cond: g.currentCombo >= 3 },
+        { id: 'combo_king',      cond: g.currentCombo >= 5 },
+        { id: 'castle_cleared',  cond: g.totalCompleted >= 25 },
+        { id: 'world_8_1',       cond: g.totalCompleted >= 100 },
+        { id: 'unstoppable',     cond: g.streak >= 30 },
+        { id: 'level_up_legend', cond: g.level >= 5 },
+      ];
+      const newly = checks.filter(a => a.cond && !g.unlockedAchievements.includes(a.id));
+      newly.forEach(a => g.unlockedAchievements.push(a.id));
+      return newly;
+    }
+
+    // ── Task State ────────────────────────────────────────────────────────────
     const state = {
       tasks: [],
       load() {
         try { this.tasks = JSON.parse(localStorage.getItem('todo-tasks')) || []; }
         catch { this.tasks = []; }
       },
-      save() {
-        localStorage.setItem('todo-tasks', JSON.stringify(this.tasks));
-      },
+      save() { localStorage.setItem('todo-tasks', JSON.stringify(this.tasks)); },
       add(text) {
         this.tasks.push({ id: crypto.randomUUID(), text, createdAt: Date.now() });
         this.save();
       },
-      remove(id) {
-        this.tasks = this.tasks.filter(t => t.id !== id);
-        this.save();
-      }
+      remove(id) { this.tasks = this.tasks.filter(t => t.id !== id); this.save(); }
     };
 
-    // ── Renderer ─────────────────────────────────────────────────────────────
-    const taskList   = document.getElementById('task-list');
+    // ── Renderers ─────────────────────────────────────────────────────────────
+    const taskListEl = document.getElementById('task-list');
     const emptyState = document.getElementById('empty-state');
 
     function render() {
-      taskList.innerHTML = '';
+      taskListEl.innerHTML = '';
       emptyState.style.display = state.tasks.length === 0 ? 'block' : 'none';
-
       state.tasks.forEach(task => {
         const card = document.createElement('div');
         card.className = 'task-card';
@@ -292,154 +720,277 @@
         const btn = document.createElement('button');
         btn.className = 'done-btn';
         btn.textContent = '★ DONE';
-        btn.addEventListener('click', () => markDone(card, task.id));
+        btn.addEventListener('click', () => onTaskDone(card, task.id));
 
         card.appendChild(span);
         card.appendChild(btn);
-        taskList.appendChild(card);
+        taskListEl.appendChild(card);
       });
+      renderStats();
     }
 
-    function markDone(card, id) {
-      explode(card);
+    function renderHUD() {
+      const cur  = getLevel(g.xp);
+      const next = LEVELS[cur.level]; // cur.level is 1-10; LEVELS is 0-indexed so LEVELS[1] = level 2
+      let pct = 100, label = `${g.xp} XP (MAX)`;
+      if (next) {
+        const xpIn   = g.xp - cur.threshold;
+        const xpNeed = next.threshold - cur.threshold;
+        pct   = Math.min((xpIn / xpNeed) * 100, 100);
+        label = `${xpIn} / ${xpNeed} XP`;
+      }
+      document.getElementById('hud-level-badge').textContent = `LV.${cur.level}`;
+      document.getElementById('hud-level-name').textContent  = cur.name;
+      document.getElementById('hud-xp-bar-fill').style.width = `${pct}%`;
+      document.getElementById('hud-xp-label').textContent    = label;
+
+      const streakEl = document.getElementById('hud-streak');
+      streakEl.dataset.active = g.streak > 0 ? 'true' : 'false';
+      document.getElementById('hud-streak-value').textContent = g.streak;
+      document.getElementById('hud-streak-icon').textContent  = g.streak > 0 ? '🔥' : '—';
+    }
+
+    function renderStats() {
+      document.getElementById('stat-open').textContent  = state.tasks.length;
+      document.getElementById('stat-today').textContent = g.dailyHistory[todayStr()] || 0;
+      document.getElementById('stat-total').textContent = g.totalCompleted;
+    }
+
+    function renderChart() {
+      const container = document.getElementById('chart-container');
+      container.innerHTML = '';
+      const today = todayStr();
+      const DAY   = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+      const days  = Array.from({ length: 7 }, (_, i) => {
+        const d = new Date(); d.setDate(d.getDate() - (6 - i)); return d;
+      });
+      const counts = days.map(d => g.dailyHistory[d.toISOString().slice(0,10)] || 0);
+      const max    = Math.max(...counts, 1);
+
+      days.forEach((d, i) => {
+        const dateStr = d.toISOString().slice(0,10);
+        const count   = counts[i];
+        const isToday = dateStr === today;
+        const barH    = count > 0 ? Math.max((count / max) * 68, 8) : 0;
+
+        const col      = document.createElement('div'); col.className = 'chart-col';
+        const countLbl = document.createElement('span');
+        countLbl.className = 'chart-count';
+        countLbl.textContent = count > 0 ? count : '';
+        const bar = document.createElement('div');
+        bar.className = 'chart-bar' + (isToday ? ' today' : '') + (count === 0 ? ' zero' : '');
+        bar.style.height = count > 0 ? `${barH}px` : '4px';
+        const dayLbl = document.createElement('span');
+        dayLbl.className = 'chart-day';
+        dayLbl.textContent = DAY[d.getDay()];
+
+        col.appendChild(countLbl); col.appendChild(bar); col.appendChild(dayLbl);
+        container.appendChild(col);
+      });
+
+      document.getElementById('affirmation-msg').textContent =
+        AFFIRMATIONS[affirmIdx++ % AFFIRMATIONS.length];
+    }
+
+    // ── Task Completion ───────────────────────────────────────────────────────
+    function onTaskDone(card, id) {
+      const combo = updateCombo();
+      const xp    = calcXP(g.streak, combo);
+      updateStreak();
+      updateDailyHistory();
+      g.totalCompleted++;
+      const { leveledUp, newLevel } = awardXP(xp);
+      const newAch = checkAchievements();
+      saveG();
+
+      // Immediate effects
+      explodeCard(card);
       card.classList.add('exploding');
+      showXPPopup(xp, combo, card);
+      showAffirmationToast();
+      if (combo >= 2) showComboIndicator(combo);
+      renderHUD();
+
+      // After card animation
       setTimeout(() => {
         state.remove(id);
         render();
+        if (leveledUp)    showLevelUp(newLevel);
+        if (newAch.length) queueAchievements(newAch);
       }, 350);
     }
 
-    // ── Add Task ─────────────────────────────────────────────────────────────
-    const input  = document.getElementById('task-input');
-    const addBtn = document.getElementById('add-btn');
+    // ── Add Task ──────────────────────────────────────────────────────────────
+    const inputEl = document.getElementById('task-input');
+    document.getElementById('add-btn').addEventListener('click', addTask);
+    inputEl.addEventListener('keydown', e => { if (e.key === 'Enter') addTask(); });
 
     function addTask() {
-      const text = input.value.trim();
+      const text = inputEl.value.trim();
       if (!text) return;
       state.add(text);
-      input.value = '';
-      input.focus();
+      inputEl.value = '';
+      inputEl.focus();
       render();
     }
 
-    addBtn.addEventListener('click', addTask);
-    input.addEventListener('keydown', e => { if (e.key === 'Enter') addTask(); });
+    // ── Analytics Toggle ──────────────────────────────────────────────────────
+    document.getElementById('analytics-toggle').addEventListener('click', () => {
+      const panel = document.getElementById('analytics-panel');
+      const open  = !panel.classList.contains('hidden');
+      panel.classList.toggle('hidden', open);
+      document.getElementById('analytics-toggle').textContent = open ? 'STATS ▼' : 'STATS ▲';
+      if (!open) renderChart();
+    });
 
-    // ── Particle Engine — coins & block chunks ───────────────────────────────
+    // ── UI Effects ────────────────────────────────────────────────────────────
+    function showXPPopup(xp, combo, cardEl) {
+      const rect = cardEl.getBoundingClientRect();
+      const el   = document.createElement('div');
+      el.className   = 'xp-popup';
+      el.textContent = combo >= 2 ? `+${xp} XP  x${combo}!` : `+${xp} XP`;
+      el.style.left  = `${rect.left + rect.width / 2 - 50}px`;
+      el.style.top   = `${rect.top - 8}px`;
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 1000);
+    }
+
+    function showAffirmationToast() {
+      const el = document.getElementById('affirmation-toast');
+      el.textContent = AFFIRMATIONS[affirmIdx++ % AFFIRMATIONS.length];
+      el.classList.add('show');
+      setTimeout(() => el.classList.remove('show'), 1900);
+    }
+
+    let comboTimer = null;
+    function showComboIndicator(combo) {
+      const el     = document.getElementById('combo-indicator');
+      const colors = ['#ffffff', '#ffaa00', '#ff4040', '#ffd700', '#ff00ff'];
+      const sizes  = ['0.9rem', '1.1rem', '1.2rem', '1.3rem', '1.5rem'];
+      const idx    = Math.min(combo - 2, colors.length - 1);
+      el.textContent   = `x${combo} COMBO!`;
+      el.style.color   = colors[idx];
+      el.style.fontSize = sizes[idx];
+      el.style.textShadow = `3px 3px 0 rgba(0,0,0,0.7)`;
+      // Force restart
+      el.classList.remove('show');
+      void el.offsetWidth;
+      el.classList.add('show');
+      clearTimeout(comboTimer);
+      comboTimer = setTimeout(() => el.classList.remove('show'), 1000);
+    }
+
+    let achQueue = [], achBusy = false;
+    function queueAchievements(list) {
+      achQueue.push(...list);
+      if (!achBusy) nextAchievement();
+    }
+    function nextAchievement() {
+      if (!achQueue.length) { achBusy = false; return; }
+      achBusy = true;
+      const a = ACHIEVEMENTS[achQueue.shift().id];
+      document.getElementById('ach-name').textContent = `★ ${a.name}`;
+      document.getElementById('ach-desc').textContent = a.desc;
+      const toast = document.getElementById('ach-toast');
+      toast.classList.add('up');
+      setTimeout(() => { toast.classList.remove('up'); setTimeout(nextAchievement, 600); }, 3600);
+    }
+
+    // ── Level Up Overlay ──────────────────────────────────────────────────────
+    let luTimer = null;
+    function showLevelUp(lvl) {
+      document.getElementById('lu-badge').textContent = `LV.${lvl.level}`;
+      document.getElementById('lu-name').textContent  = lvl.name;
+      document.getElementById('levelup-overlay').classList.remove('hidden');
+
+      explodeAt(window.innerWidth / 2, window.innerHeight / 2, 70);
+      const pts = [
+        [120, 120], [window.innerWidth - 120, 120],
+        [120, window.innerHeight - 120], [window.innerWidth - 120, window.innerHeight - 120],
+        [window.innerWidth / 2, 60]
+      ];
+      pts.forEach(([x, y], i) => setTimeout(() => explodeAt(x, y, 25), 120 + i * 120));
+
+      clearTimeout(luTimer);
+      luTimer = setTimeout(closeLevelUp, 5500);
+    }
+    function closeLevelUp() {
+      clearTimeout(luTimer);
+      document.getElementById('levelup-overlay').classList.add('hidden');
+    }
+    document.getElementById('lu-btn').addEventListener('click', closeLevelUp);
+
+    // ── Particle Engine ───────────────────────────────────────────────────────
     const canvas = document.getElementById('particle-canvas');
     const ctx    = canvas.getContext('2d');
     let particles = [];
 
-    function resizeCanvas() {
-      canvas.width  = window.innerWidth;
-      canvas.height = window.innerHeight;
-    }
+    function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
 
-    // Coin particle
-    function drawCoin(ctx, p) {
-      ctx.save();
-      ctx.globalAlpha = p.alpha;
-      ctx.translate(p.x, p.y);
-      // Squish horizontally to simulate spinning coin
-      ctx.scale(Math.abs(Math.cos(p.rotation)), 1);
-      ctx.fillStyle = p.color;
-      ctx.beginPath();
-      ctx.arc(0, 0, p.size, 0, Math.PI * 2);
-      ctx.fill();
-      // Shine
-      ctx.fillStyle = 'rgba(255,255,200,0.6)';
-      ctx.beginPath();
-      ctx.arc(-p.size * 0.2, -p.size * 0.2, p.size * 0.35, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
+    const COIN_COLORS  = ['#ffd700','#ffec6e','#ffc200','#ffe566','#fff8a0'];
+    const CHUNK_COLORS = ['#e8b800','#a07800','#ffe85c','#3a2800','#c49000'];
+
+    function explodeCard(el) {
+      const r = el.getBoundingClientRect();
+      explodeAt(r.left + r.width / 2, r.top + r.height / 2, 28);
     }
 
-    // Block chunk particle
-    function drawChunk(ctx, p) {
-      ctx.save();
-      ctx.globalAlpha = p.alpha;
-      ctx.translate(p.x, p.y);
-      ctx.rotate(p.rotation);
-      ctx.fillStyle = p.color;
-      ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
-      // Bevel highlight
-      ctx.fillStyle = 'rgba(255,255,255,0.4)';
-      ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.25);
-      ctx.fillRect(-p.size / 2, -p.size / 2, p.size * 0.25, p.size);
-      ctx.restore();
-    }
-
-    const COIN_COLORS  = ['#ffd700', '#ffec6e', '#ffc200', '#ffe566'];
-    const CHUNK_COLORS = ['#e8b800', '#a07800', '#ffe85c', '#3a2800'];
-
-    function explode(cardEl) {
-      const rect = cardEl.getBoundingClientRect();
-      const cx = rect.left + rect.width  / 2;
-      const cy = rect.top  + rect.height / 2;
-
-      // Coins — shoot upward like hitting a ? block
-      for (let i = 0; i < 8; i++) {
-        const spread = (Math.random() - 0.5) * 4;
+    function explodeAt(cx, cy, count) {
+      const coins = Math.floor(count * 0.35);
+      for (let i = 0; i < coins; i++) {
         particles.push({
-          type:     'coin',
-          x:        cx + (Math.random() - 0.5) * rect.width * 0.6,
-          y:        cy,
-          vx:       spread,
-          vy:       -(8 + Math.random() * 7),
-          size:     8 + Math.random() * 6,
-          color:    COIN_COLORS[Math.floor(Math.random() * COIN_COLORS.length)],
-          alpha:    1,
-          rotation: Math.random() * Math.PI * 2,
-          rotSpeed: 0.15 + Math.random() * 0.2,
-          gravity:  0.4
+          type:'coin', x: cx + (Math.random()-0.5)*60, y: cy,
+          vx:(Math.random()-0.5)*5, vy:-(7+Math.random()*8),
+          size:7+Math.random()*7, color:COIN_COLORS[~~(Math.random()*COIN_COLORS.length)],
+          alpha:1, rotation:Math.random()*Math.PI*2, rotSpeed:0.14+Math.random()*0.2, gravity:0.38
         });
       }
-
-      // Block chunks — scatter outward
-      for (let i = 0; i < 18; i++) {
-        const angle = Math.random() * Math.PI * 2;
-        const speed = 3 + Math.random() * 8;
+      for (let i = 0; i < count - coins; i++) {
+        const a = Math.random()*Math.PI*2, s = 3+Math.random()*9;
         particles.push({
-          type:     'chunk',
-          x:        cx + (Math.random() - 0.5) * rect.width * 0.5,
-          y:        cy + (Math.random() - 0.5) * rect.height * 0.5,
-          vx:       Math.cos(angle) * speed,
-          vy:       Math.sin(angle) * speed - 3,
-          size:     6 + Math.random() * 10,
-          color:    CHUNK_COLORS[Math.floor(Math.random() * CHUNK_COLORS.length)],
-          alpha:    1,
-          rotation: Math.random() * Math.PI * 2,
-          rotSpeed: (Math.random() - 0.5) * 0.3,
-          gravity:  0.35
+          type:'chunk', x:cx+(Math.random()-0.5)*44, y:cy+(Math.random()-0.5)*20,
+          vx:Math.cos(a)*s, vy:Math.sin(a)*s-3,
+          size:5+Math.random()*11, color:CHUNK_COLORS[~~(Math.random()*CHUNK_COLORS.length)],
+          alpha:1, rotation:Math.random()*Math.PI*2, rotSpeed:(Math.random()-0.5)*0.3, gravity:0.3
         });
       }
     }
 
     function animateParticles() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-
       for (let i = particles.length - 1; i >= 0; i--) {
         const p = particles[i];
-        p.vy       += p.gravity;
-        p.x        += p.vx;
-        p.y        += p.vy;
-        p.rotation += p.rotSpeed;
-        p.alpha    -= 0.018;
-
+        p.vy += p.gravity; p.x += p.vx; p.y += p.vy;
+        p.rotation += p.rotSpeed; p.alpha -= 0.016;
         if (p.alpha <= 0.01) { particles.splice(i, 1); continue; }
-
-        if (p.type === 'coin') drawCoin(ctx, p);
-        else                   drawChunk(ctx, p);
+        ctx.save(); ctx.globalAlpha = p.alpha;
+        if (p.type === 'coin') {
+          ctx.translate(p.x, p.y);
+          ctx.scale(Math.abs(Math.cos(p.rotation)), 1);
+          ctx.fillStyle = p.color;
+          ctx.beginPath(); ctx.arc(0, 0, p.size, 0, Math.PI*2); ctx.fill();
+          ctx.fillStyle = 'rgba(255,255,200,0.5)';
+          ctx.beginPath(); ctx.arc(-p.size*0.25, -p.size*0.25, p.size*0.35, 0, Math.PI*2); ctx.fill();
+        } else {
+          ctx.translate(p.x, p.y); ctx.rotate(p.rotation);
+          ctx.fillStyle = p.color;
+          ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size);
+          ctx.fillStyle = 'rgba(255,255,255,0.35)';
+          ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size*0.28);
+          ctx.fillRect(-p.size/2, -p.size/2, p.size*0.28, p.size);
+        }
+        ctx.restore();
       }
-
       requestAnimationFrame(animateParticles);
     }
 
-    // ── Boot ─────────────────────────────────────────────────────────────────
+    // ── Boot ──────────────────────────────────────────────────────────────────
     state.load();
+    loadG();
     render();
+    renderHUD();
     animateParticles();
   </script>
 </body>
