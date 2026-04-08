@@ -69,7 +69,7 @@
 
     #hud-level { display: flex; flex-direction: column; gap: 5px; min-width: 80px; }
     #hud-level-badge { font-size: 0.65rem; color: #ffd700; text-shadow: 2px 2px 0 #a07000; }
-    #hud-level-name  { font-size: 0.27rem; color: #ffec6e; line-height: 1.5; }
+    #hud-level-name  { font-size: 0.38rem; color: #ffec6e; line-height: 1.5; }
 
     #hud-xp-wrap {
       flex: 1;
@@ -98,7 +98,7 @@
       from { background-position: 100% 0%; }
       to   { background-position: -100% 0%; }
     }
-    #hud-xp-label { font-size: 0.27rem; color: #aaa; }
+    #hud-xp-label { font-size: 0.33rem; color: #aaa; }
 
     #hud-streak { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 64px; }
     #hud-streak-icon  { font-size: 1rem; line-height: 1; }
@@ -107,7 +107,7 @@
       color: #2ecc40;
       animation: streak-pulse 1.4s steps(2) infinite;
     }
-    #hud-streak-label { font-size: 0.24rem; color: #777; }
+    #hud-streak-label { font-size: 0.33rem; color: #aaa; }
     @keyframes streak-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.65; } }
 
     /* ── Stats Row ───────────────────────────────────────────────────────── */
@@ -134,13 +134,13 @@
       transition: transform 0.15s steps(3);
     }
     .stat-num.pop { transform: scale(1.3); }
-    .stat-lbl { font-size: 0.26rem; color: #777; }
+    .stat-lbl { font-size: 0.38rem; color: #aaa; }
     #analytics-toggle {
       font-family: 'Press Start 2P', monospace;
-      font-size: 0.3rem;
+      font-size: 0.38rem;
       background: #0d061f;
       border: 3px solid #3a2870;
-      color: #888;
+      color: #aaa;
       padding: 8px 10px;
       cursor: pointer;
       white-space: nowrap;
@@ -179,7 +179,7 @@
       height: 100%;
       gap: 4px;
     }
-    .chart-count { font-size: 0.22rem; color: #ffd700; min-height: 0.3rem; }
+    .chart-count { font-size: 0.3rem; color: #ffd700; min-height: 0.4rem; }
     .chart-bar {
       width: 100%;
       background: #e8b800;
@@ -189,7 +189,7 @@
     }
     .chart-bar.today { background: #2ecc40; border-color: #1a5c20; box-shadow: inset 2px 2px 0 #5ef080; }
     .chart-bar.zero  { background: #2a1a5a; border-color: #3a2870; box-shadow: none; min-height: 4px; }
-    .chart-day { font-size: 0.22rem; color: #666; }
+    .chart-day { font-size: 0.3rem; color: #888; }
     #affirmation-msg {
       font-size: 0.34rem;
       color: #ffec6e;
@@ -804,19 +804,20 @@
       saveG();
 
       // Immediate effects
+      playCoin();
       explodeCard(card);
       card.classList.add('exploding');
       showXPPopup(xp, combo, card);
       showAffirmationToast();
-      if (combo >= 2) showComboIndicator(combo);
+      if (combo >= 2) { playCombo(combo); showComboIndicator(combo); }
       renderHUD();
 
       // After card animation
       setTimeout(() => {
         state.remove(id);
         render();
-        if (leveledUp)    showLevelUp(newLevel);
-        if (newAch.length) queueAchievements(newAch);
+        if (leveledUp)     { playLevelUp(); showLevelUp(newLevel); }
+        if (newAch.length) { playAchievement(); queueAchievements(newAch); }
       }, 350);
     }
 
@@ -828,6 +829,7 @@
     function addTask() {
       const text = inputEl.value.trim();
       if (!text) return;
+      playAdd();
       state.add(text);
       inputEl.value = '';
       inputEl.focus();
@@ -984,6 +986,53 @@
         ctx.restore();
       }
       requestAnimationFrame(animateParticles);
+    }
+
+    // ── Sound Engine ─────────────────────────────────────────────────────────
+    let audioCtx = null;
+    function getACtx() {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      return audioCtx;
+    }
+
+    function tone(freq, type, startOffset, duration, vol = 0.25) {
+      const ctx  = getACtx();
+      const osc  = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, ctx.currentTime + startOffset);
+      gain.gain.setValueAtTime(vol, ctx.currentTime + startOffset);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + startOffset + duration);
+      osc.start(ctx.currentTime + startOffset);
+      osc.stop(ctx.currentTime + startOffset + duration + 0.01);
+    }
+
+    function playCoin() {
+      tone(988,  'square', 0,    0.07, 0.28);
+      tone(1319, 'square', 0.07, 0.18, 0.28);
+    }
+
+    function playAdd() {
+      tone(330, 'square', 0,    0.04, 0.15);
+      tone(440, 'square', 0.04, 0.06, 0.12);
+    }
+
+    function playCombo(combo) {
+      const base = 440 + (combo - 2) * 110;
+      for (let i = 0; i < Math.min(combo - 1, 4); i++)
+        tone(base + i * 90, 'square', i * 0.07, 0.09, 0.2);
+    }
+
+    function playLevelUp() {
+      const notes = [523, 659, 784, 1047, 1319];
+      notes.forEach((f, i) => tone(f, 'square', i * 0.1, 0.13, 0.22));
+      tone(1319, 'square', notes.length * 0.1, 0.5, 0.28); // hold final note
+    }
+
+    function playAchievement() {
+      [659, 784, 988, 1319].forEach((f, i) => tone(f, 'square', i * 0.09, 0.11, 0.2));
     }
 
     // ── Boot ──────────────────────────────────────────────────────────────────
