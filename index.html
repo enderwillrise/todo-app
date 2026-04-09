@@ -900,7 +900,7 @@
         renderTasks();
         if (leveledUp)     { playLevelUp(); showLevelUp(newLevel); }
         if (newAch.length) { playAchievement(); queueAchievements(newAch); }
-        await Promise.all([
+        const results = await Promise.allSettled([
           sb.from('tasks').delete().eq('id', taskId),
           sb.from('archived_tasks').insert({
             user_id: currentUser.id, text: task.text,
@@ -908,8 +908,13 @@
           }),
           saveProfile(),
         ]);
-        // Invalidate archive cache
-        archiveState.loaded = false;
+        const arcResult = results[1];
+        if (arcResult.status === 'rejected' || arcResult.value?.error) {
+          showErrorToast('ARCHIVE SAVE FAILED. CHECK SUPABASE SETUP.');
+          console.error('Archive insert error:', arcResult);
+        }
+        // Reset archive cache so it refetches from scratch next open
+        Object.assign(archiveState, { loaded: false, items: [], offset: 0, hasMore: true });
       }, 350);
     }
 
@@ -1330,7 +1335,18 @@
     // ── Boot ──────────────────────────────────────────────────────────────────
     animateParticles();
 
+    // Safety net: if auth check doesn't resolve in 6s, show login screen
+    let authResolved = false;
+    const authTimeout = setTimeout(() => {
+      if (!authResolved) {
+        console.warn('Auth timed out — showing login screen');
+        showScreen('auth');
+      }
+    }, 6000);
+
     sb.auth.onAuthStateChange(async (event, session) => {
+      authResolved = true;
+      clearTimeout(authTimeout);
       if (session) {
         currentUser = session.user;
         await syncProfile();
