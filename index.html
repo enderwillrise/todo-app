@@ -1144,7 +1144,9 @@
       g = { ...DEFAULT_G };
       tasks = [];
       resetArchiveState();
+      authResolved = false;
       await sb.auth.signOut();
+      showScreen('auth');
     }
 
     // ── Screen Management ─────────────────────────────────────────────────────
@@ -1335,28 +1337,44 @@
     // ── Boot ──────────────────────────────────────────────────────────────────
     animateParticles();
 
-    // Safety net: if auth check doesn't resolve in 6s, show login screen
     let authResolved = false;
-    const authTimeout = setTimeout(() => {
-      if (!authResolved) {
-        console.warn('Auth timed out — showing login screen');
-        showScreen('auth');
-      }
-    }, 6000);
 
-    sb.auth.onAuthStateChange(async (event, session) => {
+    async function bootWithSession(session) {
+      if (authResolved) return;
       authResolved = true;
-      clearTimeout(authTimeout);
       if (session) {
         currentUser = session.user;
-        await syncProfile();
-        await loadTasks();
+        try { await syncProfile(); } catch(e) { console.error('syncProfile failed', e); }
+        try { await loadTasks(); }   catch(e) { console.error('loadTasks failed', e); }
         showScreen('app');
       } else {
         currentUser = null;
         showScreen('auth');
       }
+    }
+
+    // Primary: onAuthStateChange (fires on load with current session)
+    sb.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_OUT') { authResolved = false; }
+      await bootWithSession(session);
     });
+
+    // Fallback: direct getSession() in case listener is slow
+    setTimeout(async () => {
+      if (authResolved) return;
+      try {
+        const { data } = await sb.auth.getSession();
+        await bootWithSession(data?.session ?? null);
+      } catch(e) {
+        console.error('getSession failed', e);
+        showScreen('auth');
+      }
+    }, 1500);
+
+    // Last resort: if nothing resolved after 5s, show auth
+    setTimeout(() => {
+      if (!authResolved) { authResolved = true; showScreen('auth'); }
+    }, 5000);
   </script>
 </body>
 </html>
