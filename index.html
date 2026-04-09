@@ -234,10 +234,10 @@
     #task-list { display: flex; flex-direction: column; gap: 16px; }
 
     .task-card {
-      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      display: flex; flex-direction: column;
       background: #e8b800; border: 4px solid #3a2800;
       box-shadow: inset 4px 4px 0 #ffe85c, inset -4px -4px 0 #a07800, 0 8px 0 #3a2800;
-      padding: 16px 18px; animation: slide-in 200ms ease-out both;
+      animation: slide-in 200ms ease-out both;
       position: relative; margin-bottom: 8px;
     }
     .task-card::before {
@@ -381,6 +381,138 @@
     ::-webkit-scrollbar { width: 8px; }
     ::-webkit-scrollbar-track { background: #1a0a3e; }
     ::-webkit-scrollbar-thumb { background: #ffd700; border: 2px solid #1a0a3e; }
+
+    /* ── Theme Button ── */
+    #theme-btn {
+      font-family: 'Press Start 2P', monospace; font-size: 0.9rem;
+      background: transparent; border: 2px solid #555; color: #fff;
+      padding: 4px 8px; cursor: pointer; line-height: 1;
+    }
+    #theme-btn:hover { border-color: #ffd700; }
+    body.light #theme-btn { color: #1a0a3e; border-color: #c8b0e8; }
+
+    /* ── Swimlanes ── */
+    .swimlane { margin-bottom: 16px; }
+    .lane-header {
+      font-family: 'Press Start 2P', monospace; font-size: 0.4rem;
+      padding: 8px 14px; display: flex; align-items: center; justify-content: space-between;
+      letter-spacing: 1px;
+    }
+    .lane-count { background: rgba(0,0,0,0.2); padding: 3px 8px; font-size: 0.35rem; }
+    .lane-body { display: flex; flex-direction: column; gap: 10px; padding: 10px 0 0 0; }
+
+    /* ── Task Card (updated for swimlanes) ── */
+    .task-main {
+      display: flex; align-items: center; gap: 10px;
+      padding: 14px 16px; cursor: pointer; flex-wrap: wrap;
+    }
+
+    /* ── Tag preview on cards ── */
+    .task-tag-preview { display: flex; gap: 4px; flex-wrap: wrap; width: 100%; padding: 0 16px 8px; }
+    .tag-chip-preview {
+      font-family: 'Press Start 2P', monospace; font-size: 0.25rem;
+      background: rgba(58,40,0,0.15); border: 1px solid rgba(58,40,0,0.3);
+      color: #3a2800; padding: 2px 6px;
+    }
+
+    /* ── Task Detail Panel ── */
+    .task-detail {
+      border-top: 3px solid #a07800; background: rgba(58,40,0,0.08);
+      padding: 14px 16px; display: flex; flex-direction: column; gap: 14px;
+    }
+    .detail-section { display: flex; flex-direction: column; gap: 8px; }
+    .detail-label { font-size: 0.3rem; color: #5a4000; letter-spacing: 1px; }
+    .detail-due-pills { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+    .detail-pill {
+      font-family: 'Press Start 2P', monospace; font-size: 0.3rem;
+      background: rgba(58,40,0,0.1); border: 2px solid rgba(58,40,0,0.25); color: #5a4000;
+      padding: 5px 10px; cursor: pointer; white-space: nowrap;
+    }
+    .detail-pill:hover { background: rgba(58,40,0,0.2); }
+    .detail-pill.active { background: #3a2800; color: #ffd700; border-color: #3a2800; }
+    .detail-date-input {
+      font-family: 'Press Start 2P', monospace; font-size: 0.3rem;
+      background: rgba(58,40,0,0.1); border: 2px solid rgba(58,40,0,0.25);
+      color: #3a2800; padding: 5px 8px; outline: none;
+    }
+    .detail-date-input:focus { border-color: #3a2800; }
+    .tag-input-wrap { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .tag-chip {
+      font-family: 'Press Start 2P', monospace; font-size: 0.28rem;
+      background: #3a2800; border: 2px solid #5a4000; color: #ffd700;
+      padding: 4px 8px; display: flex; align-items: center; gap: 5px;
+    }
+    .tag-chip-remove {
+      background: none; border: none; color: #ffd700; cursor: pointer;
+      font-size: 0.6rem; line-height: 1; padding: 0; opacity: 0.7;
+    }
+    .tag-chip-remove:hover { opacity: 1; }
+    .tag-field {
+      font-family: 'Press Start 2P', monospace; font-size: 0.28rem;
+      background: rgba(58,40,0,0.1); border: 2px dashed rgba(58,40,0,0.3);
+      color: #3a2800; padding: 4px 8px; outline: none; width: 100px;
+    }
+    .tag-field:focus { border-color: #3a2800; border-style: solid; }
+    .tag-field::placeholder { color: rgba(58,40,0,0.4); }
+    .task-desc-input {
+      font-family: 'Press Start 2P', monospace; font-size: 0.3rem;
+      background: rgba(58,40,0,0.08); border: 2px solid rgba(58,40,0,0.2);
+      color: #3a2800; padding: 8px; outline: none; resize: vertical;
+      min-height: 56px; width: 100%; line-height: 2;
+    }
+    .task-desc-input:focus { border-color: rgba(58,40,0,0.5); }
+    .task-desc-input::placeholder { color: rgba(58,40,0,0.3); }
+
+    /* ── Light Mode ── */
+    body.light {
+      background: #f5f0ff;
+      background-image:
+        radial-gradient(circle at 12% 18%, rgba(100,50,200,0.15) 1px, transparent 1px),
+        radial-gradient(circle at 38% 62%, rgba(100,50,200,0.15) 1px, transparent 1px),
+        radial-gradient(circle at 68% 14%, rgba(100,50,200,0.15) 1px, transparent 1px),
+        radial-gradient(circle at 84% 44%, rgba(100,50,200,0.15) 1px, transparent 1px),
+        radial-gradient(circle at 54% 82%, rgba(100,50,200,0.15) 1px, transparent 1px),
+        radial-gradient(circle at 24% 92%, rgba(100,50,200,0.15) 1px, transparent 1px),
+        radial-gradient(circle at 91% 76%, rgba(100,50,200,0.15) 1px, transparent 1px),
+        radial-gradient(circle at 6%  52%, rgba(100,50,200,0.15) 1px, transparent 1px),
+        radial-gradient(circle at 47% 32%, rgba(100,50,200,0.15) 1px, transparent 1px),
+        radial-gradient(circle at 77% 68%, rgba(100,50,200,0.15) 1px, transparent 1px);
+      color: #1a0a3e;
+    }
+    body.light #loading-screen { background: #f5f0ff; }
+    body.light #loading-screen p { color: #8b5cf6; }
+    body.light #auth-screen { background: #f5f0ff; }
+    body.light #auth-box { background: #fff; box-shadow: inset 3px 3px 0 #e0d0ff, inset -3px -3px 0 #c8b0e8, 0 8px 0 #a07000; }
+    body.light .auth-tab { background: #f0ebff; border-color: #c8b0e8; color: #6a5a8a; }
+    body.light .auth-input { background: #f8f4ff; border-color: #c8b0e8; color: #1a0a3e; }
+    body.light .pass-toggle { background: #e8e0ff; border-color: #c8b0e8; }
+    body.light #hud-bar { background: #fff; }
+    body.light #hud-level-name { color: #5a4a8a; }
+    body.light #hud-xp-label { color: #5a4a8a; }
+    body.light #hud-streak-label { color: #5a4a8a; }
+    body.light header p.subtitle { color: #6a5a8a; }
+    body.light #header-username { color: #8b5cf6; }
+    body.light #logout-btn { border-color: #c8b0e8; color: #6a5a8a; }
+    body.light .stat-block { background: #fff; border-color: #c8b0e8; }
+    body.light .stat-lbl { color: #6a5a8a; }
+    body.light #analytics-toggle { background: #fff; border-color: #c8b0e8; color: #6a5a8a; }
+    body.light #analytics-panel { background: #fff; border-color: #c8b0e8; }
+    body.light .chart-day { color: #6a5a8a; }
+    body.light #affirmation-msg { color: #6a5a8a; border-top-color: #c8b0e8; }
+    body.light #task-input { background: #fff; border-color: #c8b0e8; color: #1a0a3e; }
+    body.light .due-pill { background: #fff; border-color: #c8b0e8; color: #6a5a8a; }
+    body.light #due-custom { background: #fff; border-color: #c8b0e8; color: #1a0a3e; }
+    body.light #archive-toggle { background: #fff; border-color: #c8b0e8; color: #6a5a8a; }
+    body.light #archive-panel { background: #fff; border-color: #c8b0e8; }
+    body.light .archive-text { color: #6a5a8a; }
+    body.light .archive-meta { color: #9a8ab0; }
+    body.light .task-detail { background: #f8f4ff; border-top-color: #d0c8f0; }
+    body.light .detail-label { color: #6a5a8a; }
+    body.light .detail-pill { background: #f0ebff; border-color: #c8b0e8; color: #6a5a8a; }
+    body.light .tag-chip { background: #e8e0ff; border-color: #c8b0e8; color: #3a2870; }
+    body.light .tag-field { background: #f0ebff; border-color: #c8b0e8; color: #1a0a3e; }
+    body.light .task-desc-input { background: #f0ebff; border-color: #c8b0e8; color: #1a0a3e; }
+    body.light ::-webkit-scrollbar-track { background: #f5f0ff; }
   </style>
 </head>
 <body>
@@ -458,6 +590,7 @@
         <div id="header-right">
           <span id="header-username">@PLAYER</span>
           <button id="logout-btn">LOGOUT</button>
+          <button id="theme-btn" title="Toggle light/dark mode">☀️</button>
         </div>
       </header>
 
@@ -577,6 +710,10 @@
     ║  $$;
     ║
     ║  Also: Authentication → Settings → disable "Confirm email" for dev
+    ║
+    ║  -- Run these if upgrading from an older version:
+    ║  -- ALTER TABLE tasks ADD COLUMN IF NOT EXISTS tags TEXT[] NOT NULL DEFAULT '{}';
+    ║  -- ALTER TABLE tasks ADD COLUMN IF NOT EXISTS description TEXT NOT NULL DEFAULT '';
     ╚══════════════════════════════════════════════════════════╝
     */
 
@@ -587,6 +724,8 @@
 
     let currentUser = null;
     let tasks       = [];
+    let expandedTaskId = null;
+    const taskSaveTimers = {};
 
     // ── Levels ────────────────────────────────────────────────────────────────
     const LEVELS = [
@@ -856,7 +995,7 @@
     // ── Task Operations ───────────────────────────────────────────────────────
     async function loadTasks() {
       const { data, error } = await sb.from('tasks')
-        .select('id, text, due_date, created_at')
+        .select('id, text, due_date, created_at, tags, description')
         .eq('user_id', currentUser.id)
         .order('created_at', { ascending: true });
       if (!error) tasks = data || [];
@@ -871,7 +1010,7 @@
       playAdd();
       const dueDate = selectedDueDate;
       // Optimistic
-      const opt = { id: crypto.randomUUID(), text, due_date: dueDate, created_at: new Date().toISOString(), _opt: true };
+      const opt = { id: crypto.randomUUID(), text, due_date: dueDate, tags: [], description: '', created_at: new Date().toISOString(), _opt: true };
       tasks.push(opt);
       document.getElementById('task-input').value = '';
       resetDuePicker();
@@ -879,7 +1018,7 @@
       renderTasks();
       // DB
       const { data, error } = await sb.from('tasks')
-        .insert({ user_id: currentUser.id, text, due_date: dueDate })
+        .insert({ user_id: currentUser.id, text, due_date: dueDate, tags: [], description: '' })
         .select().single();
       if (error) {
         tasks = tasks.filter(t => t.id !== opt.id);
@@ -1033,41 +1172,207 @@
     }
 
     // ── Renderers ─────────────────────────────────────────────────────────────
-    function renderTasks() {
-      const list  = document.getElementById('task-list');
-      const empty = document.getElementById('empty-state');
-      list.innerHTML = '';
-      empty.style.display = tasks.length === 0 ? 'block' : 'none';
-      sortedTasks().forEach(task => {
-        const card = document.createElement('div');
-        card.className = 'task-card';
-        if (task._opt) card.style.opacity = '0.7';
-        const info = dueBadgeInfo(task.due_date);
-        if (info?.label === 'OVERDUE')  card.classList.add('overdue');
-        if (info?.label === 'TODAY')    card.classList.add('due-today');
 
-        const span = document.createElement('span');
-        span.className = 'task-text';
-        span.textContent = task.text.toUpperCase();
+    function laneOf(task) {
+      if (!task.due_date) return 'nodate';
+      const today = new Date(); today.setHours(0,0,0,0);
+      const due = new Date(task.due_date + 'T00:00:00');
+      const diff = Math.round((due - today) / 86400000);
+      if (diff < 0)  return 'overdue';
+      if (diff === 0) return 'today';
+      if (diff <= 7)  return 'week';
+      return 'later';
+    }
 
-        const btn = document.createElement('button');
-        btn.className = 'done-btn';
-        btn.textContent = '★ DONE';
-        if (!task._opt) btn.addEventListener('click', () => completeTask(task.id, card));
-        else btn.disabled = true;
+    function debounceSave(taskId, field, value) {
+      const key = taskId + field;
+      clearTimeout(taskSaveTimers[key]);
+      taskSaveTimers[key] = setTimeout(() => updateTaskField(taskId, field, value, false), 800);
+    }
 
-        card.appendChild(span);
-        if (info) {
-          const badge = document.createElement('span');
-          badge.className = 'due-badge';
-          badge.textContent = info.label;
-          badge.style.background = info.bg;
-          badge.style.color = info.fg;
-          card.appendChild(badge);
-        }
-        card.appendChild(btn);
-        list.appendChild(card);
+    async function updateTaskField(taskId, field, value, rerender = true) {
+      tasks = tasks.map(t => t.id === taskId ? { ...t, [field]: value } : t);
+      if (rerender) renderTasks();
+      await sb.from('tasks').update({ [field]: value }).eq('id', taskId);
+    }
+
+    function renderTagChips(container, tags, taskId) {
+      container.innerHTML = '';
+      (tags || []).forEach(tag => {
+        const chip = document.createElement('span');
+        chip.className = 'tag-chip';
+        const label = document.createTextNode('#' + tag + ' ');
+        const x = document.createElement('button');
+        x.className = 'tag-chip-remove'; x.textContent = '×';
+        x.addEventListener('click', () => {
+          updateTaskField(taskId, 'tags', tags.filter(t => t !== tag));
+        });
+        chip.appendChild(label); chip.appendChild(x);
+        container.appendChild(chip);
       });
+      const input = document.createElement('input');
+      input.className = 'tag-field'; input.placeholder = 'ADD TAG + ENTER';
+      input.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ',') {
+          e.preventDefault();
+          const val = input.value.trim().replace(/,/g,'').toLowerCase().replace(/\s+/g,'_');
+          if (val && !(tags||[]).includes(val)) {
+            updateTaskField(taskId, 'tags', [...(tags||[]), val]);
+          } else { input.value = ''; }
+        }
+      });
+      container.appendChild(input);
+    }
+
+    function makeTaskCard(task) {
+      const card = document.createElement('div');
+      card.className = 'task-card';
+      if (task._opt) card.style.opacity = '0.7';
+      const info = dueBadgeInfo(task.due_date);
+      if (info?.label === 'OVERDUE') card.classList.add('overdue');
+      if (info?.label === 'TODAY')   card.classList.add('due-today');
+
+      // Main row
+      const main = document.createElement('div');
+      main.className = 'task-main';
+
+      const span = document.createElement('span');
+      span.className = 'task-text';
+      span.textContent = task.text.toUpperCase();
+
+      const btn = document.createElement('button');
+      btn.className = 'done-btn'; btn.textContent = '★ DONE';
+      if (!task._opt) btn.addEventListener('click', e => { e.stopPropagation(); completeTask(task.id, card); });
+      else btn.disabled = true;
+
+      main.appendChild(span);
+      if (info) {
+        const badge = document.createElement('span');
+        badge.className = 'due-badge';
+        badge.textContent = info.label;
+        badge.style.background = info.bg;
+        badge.style.color = info.fg;
+        main.appendChild(badge);
+      }
+      main.appendChild(btn);
+      card.appendChild(main);
+
+      // Tag preview row (always visible if tags exist)
+      if (task.tags && task.tags.length) {
+        const tagRow = document.createElement('div');
+        tagRow.className = 'task-tag-preview';
+        task.tags.forEach(tag => {
+          const chip = document.createElement('span');
+          chip.className = 'tag-chip-preview';
+          chip.textContent = '#' + tag;
+          tagRow.appendChild(chip);
+        });
+        card.appendChild(tagRow);
+      }
+
+      // Detail panel
+      if (!task._opt) {
+        const detail = document.createElement('div');
+        detail.className = 'task-detail' + (expandedTaskId === task.id ? '' : ' hidden');
+
+        // Due date section
+        const dueSection = document.createElement('div');
+        dueSection.className = 'detail-section';
+        const dueLabel = document.createElement('div');
+        dueLabel.className = 'detail-label'; dueLabel.textContent = '📅 DUE DATE';
+        const pills = document.createElement('div'); pills.className = 'detail-due-pills';
+        [
+          { val: 'none',     label: 'NONE'      },
+          { val: 'today',    label: 'TODAY'     },
+          { val: 'tomorrow', label: 'TOMORROW'  },
+          { val: 'week',     label: 'THIS WEEK' },
+        ].forEach(({ val, label }) => {
+          const p = document.createElement('button');
+          p.className = 'detail-pill';
+          const active = (val === 'none' && !task.due_date) ||
+                         (val !== 'none' && task.due_date === pillToDate(val));
+          if (active) p.classList.add('active');
+          p.textContent = label;
+          p.addEventListener('click', () => updateTaskField(task.id, 'due_date', val === 'none' ? null : pillToDate(val)));
+          pills.appendChild(p);
+        });
+        const customDate = document.createElement('input');
+        customDate.type = 'date'; customDate.className = 'detail-date-input';
+        if (task.due_date) customDate.value = task.due_date;
+        customDate.addEventListener('change', e => updateTaskField(task.id, 'due_date', e.target.value || null));
+        pills.appendChild(customDate);
+        dueSection.appendChild(dueLabel); dueSection.appendChild(pills);
+        detail.appendChild(dueSection);
+
+        // Tags section
+        const tagSection = document.createElement('div');
+        tagSection.className = 'detail-section';
+        const tagLabel = document.createElement('div');
+        tagLabel.className = 'detail-label'; tagLabel.textContent = '🏷 TAGS';
+        const tagWrap = document.createElement('div'); tagWrap.className = 'tag-input-wrap';
+        renderTagChips(tagWrap, task.tags || [], task.id);
+        tagSection.appendChild(tagLabel); tagSection.appendChild(tagWrap);
+        detail.appendChild(tagSection);
+
+        // Description section
+        const descSection = document.createElement('div');
+        descSection.className = 'detail-section';
+        const descLabel = document.createElement('div');
+        descLabel.className = 'detail-label'; descLabel.textContent = '📝 NOTES';
+        const descInput = document.createElement('textarea');
+        descInput.className = 'task-desc-input'; descInput.placeholder = 'ADD NOTES...';
+        descInput.value = task.description || '';
+        descInput.addEventListener('input', e => debounceSave(task.id, 'description', e.target.value));
+        descInput.addEventListener('click', e => e.stopPropagation());
+        descSection.appendChild(descLabel); descSection.appendChild(descInput);
+        detail.appendChild(descSection);
+
+        card.appendChild(detail);
+
+        main.addEventListener('click', () => {
+          expandedTaskId = expandedTaskId === task.id ? null : task.id;
+          renderTasks();
+        });
+      }
+
+      return card;
+    }
+
+    function renderTasks() {
+      const container = document.getElementById('task-list');
+      const empty = document.getElementById('empty-state');
+      container.innerHTML = '';
+      empty.style.display = tasks.length === 0 ? 'block' : 'none';
+
+      const LANES = [
+        { key: 'overdue', label: '🚨 OVERDUE',    bg: '#e83030', fg: '#fff' },
+        { key: 'today',   label: '⚡ TODAY',       bg: '#ff9900', fg: '#fff' },
+        { key: 'week',    label: '📅 THIS WEEK',   bg: '#0070d8', fg: '#fff' },
+        { key: 'later',   label: '🗓 LATER',       bg: '#555',    fg: '#ccc' },
+        { key: 'nodate',  label: '📋 NO DATE',     bg: '#3a2870', fg: '#aaa' },
+      ];
+
+      const grouped = {};
+      LANES.forEach(l => grouped[l.key] = []);
+      sortedTasks().forEach(t => grouped[laneOf(t)].push(t));
+
+      LANES.forEach(({ key, label, bg, fg }) => {
+        const laneTasks = grouped[key];
+        if (!laneTasks.length) return;
+        const section = document.createElement('div');
+        section.className = 'swimlane';
+        const header = document.createElement('div');
+        header.className = 'lane-header';
+        header.style.cssText = `background:${bg}; color:${fg}`;
+        header.innerHTML = `<span>${label}</span><span class="lane-count">${laneTasks.length}</span>`;
+        const body = document.createElement('div');
+        body.className = 'lane-body';
+        laneTasks.forEach(t => body.appendChild(makeTaskCard(t)));
+        section.appendChild(header);
+        section.appendChild(body);
+        container.appendChild(section);
+      });
+
       renderStats();
     }
 
@@ -1330,6 +1635,15 @@
     document.getElementById('signup-btn').addEventListener('click', handleSignup);
     document.getElementById('su-password').addEventListener('keydown', e => { if(e.key==='Enter') handleSignup(); });
     document.getElementById('logout-btn').addEventListener('click', handleLogout);
+
+    // Theme
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    if (savedTheme === 'light') { document.body.classList.add('light'); document.getElementById('theme-btn').textContent = '🌙'; }
+    document.getElementById('theme-btn').addEventListener('click', () => {
+      const isLight = document.body.classList.toggle('light');
+      localStorage.setItem('theme', isLight ? 'light' : 'dark');
+      document.getElementById('theme-btn').textContent = isLight ? '🌙' : '☀️';
+    });
 
     // Task input
     document.getElementById('add-btn').addEventListener('click', addTask);
