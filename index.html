@@ -96,6 +96,15 @@
     .auth-btn:active { transform: translateY(3px); box-shadow: inset 3px 3px 0 #ff6060, inset -3px -3px 0 #8a0000, 0 2px 0 #500000; }
     .auth-err { font-size: 0.3rem; color: #ff6060; min-height: 1rem; line-height: 1.8; }
     .auth-busy { opacity: 0.6; pointer-events: none; }
+    .pass-wrap { position: relative; }
+    .pass-wrap .auth-input { padding-right: 44px; }
+    .pass-toggle {
+      position: absolute; right: 0; top: 0; bottom: 0;
+      width: 40px; background: #3a2510; border: none; border-left: 3px solid #3a2510;
+      color: #ffd700; font-size: 1rem; cursor: pointer; display: flex;
+      align-items: center; justify-content: center; opacity: 0.8;
+    }
+    .pass-toggle:hover { opacity: 1; background: #2a1a08; }
 
     /* ── App Screen ───────────────────────────────────────────────────────── */
     /* ── Header ── */
@@ -414,14 +423,20 @@
       </div>
       <div id="login-panel" class="auth-panel">
         <input id="login-email"    class="auth-input" type="email"    placeholder="EMAIL...">
-        <input id="login-password" class="auth-input" type="password" placeholder="PASSWORD...">
+        <div class="pass-wrap">
+          <input id="login-password" class="auth-input" type="password" placeholder="PASSWORD...">
+          <button type="button" class="pass-toggle" data-target="login-password">👁</button>
+        </div>
         <button id="login-btn" class="auth-btn">▶ CONTINUE</button>
         <p id="login-err" class="auth-err"></p>
       </div>
       <div id="signup-panel" class="auth-panel hidden">
         <input id="su-username" class="auth-input" type="text"     placeholder="USERNAME (3-16 CHARS)...">
         <input id="su-email"    class="auth-input" type="email"    placeholder="EMAIL...">
-        <input id="su-password" class="auth-input" type="password" placeholder="PASSWORD (6+ CHARS)...">
+        <div class="pass-wrap">
+          <input id="su-password" class="auth-input" type="password" placeholder="PASSWORD (6+ CHARS)...">
+          <button type="button" class="pass-toggle" data-target="su-password">👁</button>
+        </div>
         <button id="signup-btn" class="auth-btn">★ CREATE HERO</button>
         <p id="signup-err" class="auth-err"></p>
       </div>
@@ -1110,12 +1125,18 @@
     async function handleLogin() {
       const email = document.getElementById('login-email').value.trim();
       const pass  = document.getElementById('login-password').value;
-      document.getElementById('login-err').textContent = '';
-      if (!email || !pass) { document.getElementById('login-err').textContent = 'FILL IN ALL FIELDS.'; return; }
+      const errEl = document.getElementById('login-err');
+      errEl.textContent = '';
+      if (!email || !pass) { errEl.textContent = 'FILL IN ALL FIELDS.'; return; }
       setAuthBusy(true);
-      const { error } = await sb.auth.signInWithPassword({ email, password: pass });
+      try {
+        const { error } = await sb.auth.signInWithPassword({ email, password: pass });
+        if (error) errEl.textContent = error.message.toUpperCase().slice(0, 80);
+      } catch(e) {
+        errEl.textContent = 'CONNECTION ERROR. CHECK INTERNET.';
+        console.error('Login error:', e);
+      }
       setAuthBusy(false);
-      if (error) document.getElementById('login-err').textContent = 'WRONG EMAIL OR PASSWORD.';
     }
 
     async function handleSignup() {
@@ -1284,6 +1305,16 @@
       document.getElementById('signup-panel').classList.remove('hidden');
       document.getElementById('login-panel').classList.add('hidden');
     });
+    // Password show/hide toggles
+    document.querySelectorAll('.pass-toggle').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const input = document.getElementById(btn.dataset.target);
+        const show  = input.type === 'password';
+        input.type  = show ? 'text' : 'password';
+        btn.textContent = show ? '🙈' : '👁';
+      });
+    });
+
     document.getElementById('login-btn').addEventListener('click', handleLogin);
     document.getElementById('login-password').addEventListener('keydown', e => { if(e.key==='Enter') handleLogin(); });
     document.getElementById('signup-btn').addEventListener('click', handleSignup);
