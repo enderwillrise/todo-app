@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -26,437 +27,347 @@
         radial-gradient(circle at 77% 68%, rgba(255,255,255,0.7) 1px, transparent 1px);
       color: #fff;
       min-height: 100vh;
-      padding: 32px 20px 80px;
+      padding: 28px 20px 80px;
     }
 
-    #particle-canvas {
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      z-index: 100;
-    }
-
+    #particle-canvas { position: fixed; inset: 0; pointer-events: none; z-index: 100; }
     .app { max-width: 620px; margin: 0 auto; }
     .hidden { display: none !important; }
 
-    /* ── Header ─────────────────────────────────────────────────────────── */
-    header { margin-bottom: 18px; text-align: center; }
-    header h1 {
-      font-size: 1.4rem;
-      color: #ffd700;
-      text-shadow: 3px 3px 0 #a07000, 6px 6px 0 #5a3d00;
-      letter-spacing: 2px;
+    /* ── Loading ──────────────────────────────────────────────────────────── */
+    #loading-screen {
+      position: fixed; inset: 0; z-index: 3000;
+      background: #1a0a3e; display: flex; align-items: center; justify-content: center;
     }
-    header p.subtitle {
-      margin-top: 10px;
-      font-size: 0.38rem;
-      color: #aaa;
-      letter-spacing: 1px;
-    }
+    #loading-screen p { font-size: 0.7rem; color: #ffd700; animation: lu-bounce 0.5s steps(4) infinite alternate; }
 
-    /* ── HUD Bar ─────────────────────────────────────────────────────────── */
-    #hud-bar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
+    /* ── Auth Screen ──────────────────────────────────────────────────────── */
+    #auth-screen {
+      position: fixed; inset: 0; z-index: 2500;
+      background: #1a0a3e;
+      background-image:
+        radial-gradient(circle at 20% 20%, rgba(255,255,255,0.8) 1px, transparent 1px),
+        radial-gradient(circle at 70% 70%, rgba(255,255,255,0.7) 1px, transparent 1px),
+        radial-gradient(circle at 50% 10%, rgba(255,255,255,0.6) 1px, transparent 1px),
+        radial-gradient(circle at 90% 40%, rgba(255,255,255,0.8) 1px, transparent 1px);
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 28px;
+      padding: 20px;
+    }
+    #auth-logo { text-align: center; }
+    #auth-logo h1 {
+      font-size: 1.3rem; color: #ffd700;
+      text-shadow: 3px 3px 0 #a07000, 6px 6px 0 #5a3d00;
+      letter-spacing: 2px; margin-bottom: 10px;
+    }
+    #auth-logo p { font-size: 0.35rem; color: #aaa; letter-spacing: 1px; }
+
+    #auth-box {
+      width: 100%; max-width: 420px;
       background: #0d061f;
       border: 4px solid #ffd700;
-      box-shadow: inset 3px 3px 0 #2a1a5a, inset -3px -3px 0 #050210, 0 6px 0 #a07000;
-      padding: 12px 16px;
-      margin-bottom: 10px;
+      box-shadow: inset 3px 3px 0 #2a1a5a, inset -3px -3px 0 #050210, 0 8px 0 #a07000;
+      padding: 24px;
     }
+    #auth-tabs { display: flex; margin-bottom: 20px; }
+    .auth-tab {
+      flex: 1; font-family: 'Press Start 2P', monospace; font-size: 0.38rem;
+      background: #1a0a3e; border: 3px solid #3a2870; color: #888;
+      padding: 10px 4px; cursor: pointer; transition: background 0.1s, color 0.1s;
+    }
+    .auth-tab.active { background: #ffd700; color: #3a2800; border-color: #ffd700; }
+    .auth-tab:hover:not(.active) { background: #2a1a5a; color: #fff; }
 
+    .auth-panel { display: flex; flex-direction: column; gap: 12px; }
+    .auth-input {
+      background: #5c3d1e; border: 3px solid #3a2510;
+      box-shadow: inset 2px 2px 0 #7a5530;
+      padding: 12px 14px; font-family: 'Press Start 2P', monospace;
+      font-size: 0.42rem; color: #fff; outline: none; width: 100%;
+    }
+    .auth-input::placeholder { color: #9a7a50; }
+    .auth-input:focus { border-color: #ffd700; }
+    .auth-btn {
+      background: #e83030; border: 4px solid #8a0000;
+      box-shadow: inset 3px 3px 0 #ff6060, inset -3px -3px 0 #8a0000, 0 5px 0 #500000;
+      color: #fff; padding: 14px; font-family: 'Press Start 2P', monospace;
+      font-size: 0.42rem; cursor: pointer; transition: transform 0.08s, box-shadow 0.08s;
+    }
+    .auth-btn:hover { background: #ff4040; }
+    .auth-btn:active { transform: translateY(3px); box-shadow: inset 3px 3px 0 #ff6060, inset -3px -3px 0 #8a0000, 0 2px 0 #500000; }
+    .auth-err { font-size: 0.3rem; color: #ff6060; min-height: 1rem; line-height: 1.8; }
+    .auth-busy { opacity: 0.6; pointer-events: none; }
+
+    /* ── App Screen ───────────────────────────────────────────────────────── */
+    /* ── Header ── */
+    header {
+      display: flex; align-items: center; gap: 14px; margin-bottom: 18px;
+    }
+    #avatar-canvas {
+      width: 48px; height: 48px; flex-shrink: 0;
+      image-rendering: pixelated; image-rendering: crisp-edges;
+      border: 3px solid #ffd700;
+      box-shadow: inset 2px 2px 0 #2a1a5a, 0 4px 0 #a07000;
+    }
+    #header-center { flex: 1; text-align: center; }
+    header h1 {
+      font-size: 1.1rem; color: #ffd700;
+      text-shadow: 3px 3px 0 #a07000, 5px 5px 0 #5a3d00; letter-spacing: 2px;
+    }
+    header p.subtitle { margin-top: 6px; font-size: 0.32rem; color: #aaa; letter-spacing: 1px; }
+    #header-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; flex-shrink: 0; }
+    #header-username { font-size: 0.35rem; color: #ffec6e; }
+    #logout-btn {
+      font-family: 'Press Start 2P', monospace; font-size: 0.28rem;
+      background: transparent; border: 2px solid #555; color: #888;
+      padding: 5px 8px; cursor: pointer;
+    }
+    #logout-btn:hover { border-color: #e83030; color: #e83030; }
+
+    /* ── HUD Bar ── */
+    #hud-bar {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      background: #0d061f; border: 4px solid #ffd700;
+      box-shadow: inset 3px 3px 0 #2a1a5a, inset -3px -3px 0 #050210, 0 6px 0 #a07000;
+      padding: 12px 16px; margin-bottom: 10px;
+    }
     #hud-level { display: flex; flex-direction: column; gap: 5px; min-width: 80px; }
     #hud-level-badge { font-size: 0.65rem; color: #ffd700; text-shadow: 2px 2px 0 #a07000; }
     #hud-level-name  { font-size: 0.38rem; color: #ffec6e; line-height: 1.5; }
-
-    #hud-xp-wrap {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 6px;
-    }
+    #hud-xp-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; }
     #hud-xp-bar-track {
-      width: 100%;
-      height: 12px;
-      background: #3a2800;
-      border: 2px solid #a07000;
-      box-shadow: inset 2px 2px 0 #1a1000;
-      overflow: hidden;
+      width: 100%; height: 12px; background: #3a2800;
+      border: 2px solid #a07000; box-shadow: inset 2px 2px 0 #1a1000; overflow: hidden;
     }
     #hud-xp-bar-fill {
       height: 100%;
       background: linear-gradient(90deg, #ffc200, #ffd700, #ffec6e, #ffd700);
-      background-size: 300% 100%;
-      animation: xp-shimmer 2.5s linear infinite;
-      transition: width 0.5s steps(10);
-      width: 0%;
+      background-size: 300% 100%; animation: xp-shimmer 2.5s linear infinite;
+      transition: width 0.5s steps(10); width: 0%;
     }
-    @keyframes xp-shimmer {
-      from { background-position: 100% 0%; }
-      to   { background-position: -100% 0%; }
-    }
+    @keyframes xp-shimmer { from { background-position: 100% 0%; } to { background-position: -100% 0%; } }
     #hud-xp-label { font-size: 0.33rem; color: #aaa; }
-
     #hud-streak { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 64px; }
     #hud-streak-icon  { font-size: 1rem; line-height: 1; }
     #hud-streak-value { font-size: 0.65rem; color: #555; transition: color 0.3s; }
-    #hud-streak[data-active="true"] #hud-streak-value {
-      color: #2ecc40;
-      animation: streak-pulse 1.4s steps(2) infinite;
-    }
+    #hud-streak[data-active="true"] #hud-streak-value { color: #2ecc40; animation: streak-pulse 1.4s steps(2) infinite; }
     #hud-streak-label { font-size: 0.33rem; color: #aaa; }
     @keyframes streak-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.65; } }
 
-    /* ── Stats Row ───────────────────────────────────────────────────────── */
-    #stats-row {
-      display: flex;
-      align-items: stretch;
-      gap: 8px;
-      margin-bottom: 10px;
-    }
+    /* ── Stats Row ── */
+    #stats-row { display: flex; align-items: stretch; gap: 8px; margin-bottom: 10px; }
     .stat-block {
-      flex: 1;
-      background: #0d061f;
-      border: 3px solid #3a2870;
-      padding: 10px 4px;
-      text-align: center;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
+      flex: 1; background: #0d061f; border: 3px solid #3a2870;
+      padding: 10px 4px; text-align: center; display: flex; flex-direction: column; gap: 6px;
     }
-    .stat-num {
-      font-size: 0.85rem;
-      color: #ffd700;
-      text-shadow: 2px 2px 0 #a07000;
-      transition: transform 0.15s steps(3);
-    }
-    .stat-num.pop { transform: scale(1.3); }
+    .stat-num { font-size: 0.85rem; color: #ffd700; text-shadow: 2px 2px 0 #a07000; }
     .stat-lbl { font-size: 0.38rem; color: #aaa; }
     #analytics-toggle {
-      font-family: 'Press Start 2P', monospace;
-      font-size: 0.38rem;
-      background: #0d061f;
-      border: 3px solid #3a2870;
-      color: #aaa;
-      padding: 8px 10px;
-      cursor: pointer;
-      white-space: nowrap;
-      letter-spacing: 0.5px;
+      font-family: 'Press Start 2P', monospace; font-size: 0.38rem;
+      background: #0d061f; border: 3px solid #3a2870; color: #aaa;
+      padding: 8px 10px; cursor: pointer; white-space: nowrap;
     }
     #analytics-toggle:hover { background: #1e1050; color: #fff; }
 
-    /* ── Analytics Panel ─────────────────────────────────────────────────── */
+    /* ── Analytics Panel ── */
     #analytics-panel {
-      background: #0d061f;
-      border: 4px solid #3a2870;
-      box-shadow: inset 3px 3px 0 #100630;
-      padding: 18px 16px 14px;
-      margin-bottom: 14px;
+      background: #0d061f; border: 4px solid #3a2870;
+      box-shadow: inset 3px 3px 0 #100630; padding: 18px 16px 14px; margin-bottom: 14px;
     }
-    #analytics-panel h3 {
-      font-size: 0.42rem;
-      color: #ffd700;
-      text-align: center;
-      margin-bottom: 18px;
-      letter-spacing: 2px;
-    }
-    #chart-container {
-      display: flex;
-      align-items: flex-end;
-      gap: 6px;
-      height: 80px;
-      margin-bottom: 16px;
-    }
-    .chart-col {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-end;
-      height: 100%;
-      gap: 4px;
-    }
+    #analytics-panel h3 { font-size: 0.42rem; color: #ffd700; text-align: center; margin-bottom: 18px; letter-spacing: 2px; }
+    #chart-container { display: flex; align-items: flex-end; gap: 6px; height: 80px; margin-bottom: 16px; }
+    .chart-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; gap: 4px; }
     .chart-count { font-size: 0.3rem; color: #ffd700; min-height: 0.4rem; }
-    .chart-bar {
-      width: 100%;
-      background: #e8b800;
-      border: 2px solid #a07800;
-      box-shadow: inset 2px 2px 0 #ffe85c;
-      transition: height 0.4s steps(6);
-    }
+    .chart-bar { width: 100%; background: #e8b800; border: 2px solid #a07800; box-shadow: inset 2px 2px 0 #ffe85c; transition: height 0.4s steps(6); }
     .chart-bar.today { background: #2ecc40; border-color: #1a5c20; box-shadow: inset 2px 2px 0 #5ef080; }
     .chart-bar.zero  { background: #2a1a5a; border-color: #3a2870; box-shadow: none; min-height: 4px; }
     .chart-day { font-size: 0.3rem; color: #888; }
-    #affirmation-msg {
-      font-size: 0.34rem;
-      color: #ffec6e;
-      text-align: center;
-      line-height: 2;
-      border-top: 2px solid #3a2870;
-      padding-top: 12px;
-      letter-spacing: 0.5px;
-    }
+    #affirmation-msg { font-size: 0.34rem; color: #ffec6e; text-align: center; line-height: 2; border-top: 2px solid #3a2870; padding-top: 12px; letter-spacing: 0.5px; }
 
-    /* ── Input row ───────────────────────────────────────────────────────── */
-    .input-row { display: flex; margin-bottom: 20px; }
+    /* ── Input ── */
+    .input-row { display: flex; margin-bottom: 10px; }
     #task-input {
-      flex: 1;
-      background: #5c3d1e;
-      border: 4px solid #3a2510;
+      flex: 1; background: #5c3d1e; border: 4px solid #3a2510;
       box-shadow: inset 3px 3px 0 #7a5530, inset -3px -3px 0 #2a1a08;
-      padding: 14px 16px;
-      font-family: 'Press Start 2P', monospace;
-      font-size: 0.5rem;
-      color: #fff;
-      outline: none;
-      letter-spacing: 1px;
+      padding: 14px 16px; font-family: 'Press Start 2P', monospace; font-size: 0.5rem;
+      color: #fff; outline: none; letter-spacing: 1px;
     }
     #task-input::placeholder { color: #9a7a50; }
-    #task-input:focus {
-      background: #6e4d28;
-      box-shadow: inset 3px 3px 0 #8a6540, inset -3px -3px 0 #3a2510, 0 0 0 2px #ffd700;
-    }
+    #task-input:focus { background: #6e4d28; box-shadow: inset 3px 3px 0 #8a6540, inset -3px -3px 0 #3a2510, 0 0 0 2px #ffd700; }
     #add-btn {
-      background: #e83030;
-      border: 4px solid #8a0000;
+      background: #e83030; border: 4px solid #8a0000;
       box-shadow: inset 3px 3px 0 #ff6060, inset -3px -3px 0 #8a0000, 0 6px 0 #500000;
-      color: #fff;
-      padding: 14px 18px;
-      font-family: 'Press Start 2P', monospace;
-      font-size: 0.5rem;
-      cursor: pointer;
-      letter-spacing: 1px;
-      white-space: nowrap;
+      color: #fff; padding: 14px 18px; font-family: 'Press Start 2P', monospace;
+      font-size: 0.5rem; cursor: pointer; letter-spacing: 1px; white-space: nowrap;
       transition: transform 0.08s, box-shadow 0.08s;
     }
     #add-btn:hover { background: #ff4040; }
-    #add-btn:active {
-      transform: translateY(4px);
-      box-shadow: inset 3px 3px 0 #ff6060, inset -3px -3px 0 #8a0000, 0 2px 0 #500000;
-    }
+    #add-btn:active { transform: translateY(4px); box-shadow: inset 3px 3px 0 #ff6060, inset -3px -3px 0 #8a0000, 0 2px 0 #500000; }
 
-    /* ── Task list ───────────────────────────────────────────────────────── */
+    /* ── Due Picker ── */
+    #due-pill-row { display: flex; gap: 6px; margin-bottom: 18px; flex-wrap: wrap; align-items: center; }
+    .due-pill {
+      font-family: 'Press Start 2P', monospace; font-size: 0.3rem;
+      background: #0d061f; border: 2px solid #3a2870; color: #888;
+      padding: 6px 10px; cursor: pointer; white-space: nowrap;
+      transition: background 0.1s, color 0.1s;
+    }
+    .due-pill:hover { background: #1e1050; color: #fff; }
+    .due-pill.active { background: #ffd700; color: #3a2800; border-color: #ffd700; }
+    #due-custom {
+      font-family: 'Press Start 2P', monospace; font-size: 0.28rem;
+      background: #5c3d1e; border: 2px solid #3a2510; color: #fff;
+      padding: 6px 8px; outline: none;
+    }
+    #due-custom:focus { border-color: #ffd700; }
+
+    /* ── Task List ── */
     #task-list { display: flex; flex-direction: column; gap: 16px; }
 
     .task-card {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      background: #e8b800;
-      border: 4px solid #3a2800;
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      background: #e8b800; border: 4px solid #3a2800;
       box-shadow: inset 4px 4px 0 #ffe85c, inset -4px -4px 0 #a07800, 0 8px 0 #3a2800;
-      padding: 18px 20px;
-      animation: slide-in 200ms ease-out both;
-      position: relative;
-      margin-bottom: 8px;
+      padding: 16px 18px; animation: slide-in 200ms ease-out both;
+      position: relative; margin-bottom: 8px;
     }
     .task-card::before {
-      content: '?';
-      position: absolute;
-      left: -26px;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 0.85rem;
-      color: #ffd700;
-      text-shadow: 2px 2px 0 #a07000;
-      opacity: 0.4;
+      content: '?'; position: absolute; left: -26px; top: 50%; transform: translateY(-50%);
+      font-size: 0.85rem; color: #ffd700; text-shadow: 2px 2px 0 #a07000; opacity: 0.4;
     }
-    .task-text {
-      font-size: 0.48rem;
-      color: #3a2800;
-      line-height: 2;
-      flex: 1;
-      word-break: break-word;
-      letter-spacing: 0.5px;
+    .task-card.overdue { border-left: 6px solid #e83030; }
+    .task-card.due-today { border-left: 6px solid #ff9900; }
+    .task-text { font-size: 0.46rem; color: #3a2800; line-height: 2; flex: 1; word-break: break-word; letter-spacing: 0.5px; }
+    .due-badge {
+      font-size: 0.28rem; padding: 4px 8px; white-space: nowrap; flex-shrink: 0;
+      border: 2px solid rgba(0,0,0,0.2);
     }
     .done-btn {
-      background: #2ecc40;
-      border: 4px solid #1a5c20;
+      background: #2ecc40; border: 4px solid #1a5c20;
       box-shadow: inset 3px 3px 0 #5ef080, inset -3px -3px 0 #1a5c20, 0 5px 0 #0a3010;
-      color: #fff;
-      padding: 8px 12px;
-      font-family: 'Press Start 2P', monospace;
-      font-size: 0.4rem;
-      cursor: pointer;
-      white-space: nowrap;
-      flex-shrink: 0;
+      color: #fff; padding: 8px 12px; font-family: 'Press Start 2P', monospace;
+      font-size: 0.4rem; cursor: pointer; white-space: nowrap; flex-shrink: 0;
       transition: transform 0.08s, box-shadow 0.08s;
     }
     .done-btn:hover { background: #3ddd50; }
-    .done-btn:active {
-      transform: translateY(3px);
-      box-shadow: inset 3px 3px 0 #5ef080, inset -3px -3px 0 #1a5c20, 0 2px 0 #0a3010;
-    }
+    .done-btn:active { transform: translateY(3px); box-shadow: inset 3px 3px 0 #5ef080, inset -3px -3px 0 #1a5c20, 0 2px 0 #0a3010; }
 
-    /* ── Empty state ─────────────────────────────────────────────────────── */
-    #empty-state {
-      text-align: center;
-      color: #555;
-      font-size: 0.38rem;
-      margin-top: 48px;
-      line-height: 2.5;
-    }
+    /* ── Empty state ── */
+    #empty-state { text-align: center; color: #555; font-size: 0.38rem; margin-top: 40px; line-height: 2.5; }
 
-    /* ── Card animations ─────────────────────────────────────────────────── */
-    @keyframes slide-in {
-      from { transform: translateY(20px); opacity: 0; }
-      to   { transform: translateY(0);    opacity: 1; }
+    /* ── Archive ── */
+    #archive-toggle {
+      display: block; width: 100%; margin-top: 32px;
+      font-family: 'Press Start 2P', monospace; font-size: 0.38rem;
+      background: #0d061f; border: 3px solid #3a2870; color: #888;
+      padding: 12px; cursor: pointer; text-align: center;
     }
+    #archive-toggle:hover { background: #1e1050; color: #fff; }
+    #archive-panel {
+      background: #0d061f; border: 4px solid #3a2870;
+      box-shadow: inset 3px 3px 0 #100630; padding: 18px 16px; margin-top: 4px;
+    }
+    #archive-panel h3 { font-size: 0.42rem; color: #ffd700; text-align: center; margin-bottom: 18px; letter-spacing: 2px; }
+    #archive-list { display: flex; flex-direction: column; gap: 10px; }
+    .archive-row {
+      display: flex; flex-direction: column; gap: 5px;
+      border-left: 3px solid #3a2870; padding-left: 10px; opacity: 0.85;
+    }
+    .archive-text { font-size: 0.35rem; color: #ccc; text-decoration: line-through; }
+    .archive-meta { font-size: 0.26rem; color: #666; }
+    #archive-load-more {
+      display: block; width: 100%; margin-top: 14px;
+      font-family: 'Press Start 2P', monospace; font-size: 0.32rem;
+      background: transparent; border: 2px solid #3a2870; color: #888;
+      padding: 10px; cursor: pointer;
+    }
+    #archive-load-more:hover { color: #fff; border-color: #ffd700; }
+    #archive-empty { font-size: 0.32rem; color: #555; text-align: center; padding: 20px 0; }
+
+    /* ── Card animations ── */
+    @keyframes slide-in { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
     @keyframes card-explode {
-      0%   { transform: scale(1) translateY(0);   opacity: 1; }
+      0%   { transform: scale(1) translateY(0); opacity: 1; }
       25%  { transform: scale(1.1) translateY(-6px); opacity: 1; }
       100% { transform: scale(0.4) translateY(-18px); opacity: 0; }
     }
-    .task-card.exploding {
-      animation: card-explode 350ms ease-in forwards;
-      pointer-events: none;
-    }
+    .task-card.exploding { animation: card-explode 350ms ease-in forwards; pointer-events: none; }
 
-    /* ── XP Floating Popup ───────────────────────────────────────────────── */
+    /* ── XP Popup ── */
     .xp-popup {
-      position: fixed;
-      pointer-events: none;
-      font-family: 'Press Start 2P', monospace;
-      font-size: 0.48rem;
-      color: #ffd700;
-      text-shadow: 2px 2px 0 #a07000;
-      z-index: 500;
-      white-space: nowrap;
-      animation: xp-float 900ms steps(8) forwards;
+      position: fixed; pointer-events: none; font-family: 'Press Start 2P', monospace;
+      font-size: 0.48rem; color: #ffd700; text-shadow: 2px 2px 0 #a07000;
+      z-index: 500; white-space: nowrap; animation: xp-float 900ms steps(8) forwards;
     }
-    @keyframes xp-float {
-      from { transform: translateY(0);   opacity: 1; }
-      to   { transform: translateY(-52px); opacity: 0; }
-    }
+    @keyframes xp-float { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-52px); opacity: 0; } }
 
-    /* ── Level Up Overlay ────────────────────────────────────────────────── */
+    /* ── Level Up Overlay ── */
     #levelup-overlay {
-      position: fixed;
-      inset: 0;
-      z-index: 2000;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 22px;
-      background: rgba(10, 4, 30, 0.93);
-      animation: lu-flash 0.5s steps(3);
+      position: fixed; inset: 0; z-index: 2000; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 22px;
+      background: rgba(10, 4, 30, 0.93); animation: lu-flash 0.5s steps(3);
     }
     @keyframes lu-flash {
-      0%   { background: rgba(255, 215, 0, 0.65); }
-      33%  { background: rgba(10, 4, 30, 0.7); }
-      66%  { background: rgba(255, 215, 0, 0.4); }
-      100% { background: rgba(10, 4, 30, 0.93); }
+      0%   { background: rgba(255,215,0,0.65); } 33% { background: rgba(10,4,30,0.7); }
+      66%  { background: rgba(255,215,0,0.4); } 100% { background: rgba(10,4,30,0.93); }
     }
-    #lu-stars {
-      font-size: 1.2rem;
-      animation: lu-bounce 0.5s steps(4) infinite alternate;
-    }
-    #lu-title {
-      font-size: 1.3rem;
-      color: #ffd700;
-      text-shadow: 4px 4px 0 #a07000, 8px 8px 0 #5a3d00;
-      animation: lu-bounce 0.4s steps(4) infinite alternate;
-      letter-spacing: 3px;
-    }
-    @keyframes lu-bounce {
-      from { transform: translateY(0) scale(1); }
-      to   { transform: translateY(-10px) scale(1.06); }
-    }
-    #lu-badge {
-      font-size: 0.6rem;
-      color: #3a2800;
-      background: #ffd700;
-      border: 4px solid #a07000;
-      box-shadow: 0 6px 0 #5a3d00;
-      padding: 10px 22px;
-    }
-    #lu-name {
-      font-size: 0.48rem;
-      color: #ffec6e;
-      letter-spacing: 2px;
-    }
+    #lu-stars { font-size: 1.2rem; animation: lu-bounce 0.5s steps(4) infinite alternate; }
+    #lu-title { font-size: 1.3rem; color: #ffd700; text-shadow: 4px 4px 0 #a07000, 8px 8px 0 #5a3d00; animation: lu-bounce 0.4s steps(4) infinite alternate; letter-spacing: 3px; }
+    @keyframes lu-bounce { from { transform: translateY(0) scale(1); } to { transform: translateY(-10px) scale(1.06); } }
+    #lu-badge { font-size: 0.6rem; color: #3a2800; background: #ffd700; border: 4px solid #a07000; box-shadow: 0 6px 0 #5a3d00; padding: 10px 22px; }
+    #lu-name  { font-size: 0.48rem; color: #ffec6e; letter-spacing: 2px; }
     #lu-btn {
-      margin-top: 8px;
-      font-family: 'Press Start 2P', monospace;
-      font-size: 0.45rem;
-      background: #ffd700;
-      border: 4px solid #a07000;
-      box-shadow: 0 6px 0 #5a3d00;
-      color: #3a2800;
-      padding: 14px 24px;
-      cursor: pointer;
+      margin-top: 8px; font-family: 'Press Start 2P', monospace; font-size: 0.45rem;
+      background: #ffd700; border: 4px solid #a07000; box-shadow: 0 6px 0 #5a3d00;
+      color: #3a2800; padding: 14px 24px; cursor: pointer;
       animation: lu-bounce 0.55s steps(4) 0.3s infinite alternate;
     }
     #lu-btn:hover { background: #ffec6e; }
 
-    /* ── Achievement Toast ───────────────────────────────────────────────── */
+    /* ── Achievement Toast ── */
     #ach-toast {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      z-index: 1500;
-      background: #0d061f;
-      border: 4px solid #ffd700;
+      position: fixed; bottom: 20px; right: 20px; z-index: 1500;
+      background: #0d061f; border: 4px solid #ffd700;
       box-shadow: 0 8px 0 #a07000, inset 3px 3px 0 #2a1a5a;
-      padding: 14px 18px;
-      max-width: 290px;
-      pointer-events: none;
-      transform: translateY(130px);
-      opacity: 0;
-      transition: transform 0.2s steps(4), opacity 0.15s;
+      padding: 14px 18px; max-width: 290px; pointer-events: none;
+      transform: translateY(130px); opacity: 0; transition: transform 0.2s steps(4), opacity 0.15s;
     }
     #ach-toast.up { transform: translateY(0); opacity: 1; }
     #ach-name { font-size: 0.38rem; color: #ffd700; margin-bottom: 8px; }
     #ach-desc { font-size: 0.28rem; color: #ccc; line-height: 1.8; }
 
-    /* ── Affirmation Toast ───────────────────────────────────────────────── */
+    /* ── Affirmation Toast ── */
     #affirmation-toast {
-      position: fixed;
-      top: 20px;
-      left: 50%;
+      position: fixed; top: 20px; left: 50%;
       transform: translateX(-50%) translateY(-90px);
-      z-index: 1500;
-      background: #2ecc40;
-      border: 4px solid #1a5c20;
+      z-index: 1500; background: #2ecc40; border: 4px solid #1a5c20;
       box-shadow: 0 6px 0 #0a3010, inset 3px 3px 0 #5ef080;
-      padding: 10px 20px;
-      font-size: 0.37rem;
-      color: #fff;
-      white-space: nowrap;
-      opacity: 0;
-      pointer-events: none;
-      transition: transform 0.18s steps(3), opacity 0.15s;
+      padding: 10px 20px; font-size: 0.37rem; color: #fff; white-space: nowrap;
+      opacity: 0; pointer-events: none; transition: transform 0.18s steps(3), opacity 0.15s;
     }
-    #affirmation-toast.show {
-      transform: translateX(-50%) translateY(0);
-      opacity: 1;
-    }
+    #affirmation-toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
 
-    /* ── Combo Indicator ─────────────────────────────────────────────────── */
+    /* ── Error Toast ── */
+    #error-toast {
+      position: fixed; top: 20px; left: 50%;
+      transform: translateX(-50%) translateY(-90px);
+      z-index: 1600; background: #e83030; border: 4px solid #8a0000;
+      box-shadow: 0 6px 0 #500000, inset 3px 3px 0 #ff6060;
+      padding: 10px 20px; font-size: 0.35rem; color: #fff; white-space: nowrap;
+      opacity: 0; pointer-events: none; transition: transform 0.18s steps(3), opacity 0.15s;
+    }
+    #error-toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+    /* ── Combo Indicator ── */
     #combo-indicator {
-      position: fixed;
-      top: 44%;
-      left: 50%;
+      position: fixed; top: 44%; left: 50%;
       transform: translate(-50%, -50%) scale(0.2);
-      z-index: 800;
-      pointer-events: none;
-      opacity: 0;
+      z-index: 800; pointer-events: none; opacity: 0;
       transition: transform 0.14s steps(3), opacity 0.1s;
-      white-space: nowrap;
-      letter-spacing: 3px;
-      text-shadow: 3px 3px 0 rgba(0,0,0,0.6);
+      white-space: nowrap; letter-spacing: 3px; text-shadow: 3px 3px 0 rgba(0,0,0,0.6);
     }
-    #combo-indicator.show {
-      transform: translate(-50%, -50%) scale(1);
-      opacity: 1;
-    }
+    #combo-indicator.show { transform: translate(-50%, -50%) scale(1); opacity: 1; }
 
-    /* ── Scrollbar ───────────────────────────────────────────────────────── */
+    /* ── Scrollbar ── */
     ::-webkit-scrollbar { width: 8px; }
     ::-webkit-scrollbar-track { background: #1a0a3e; }
     ::-webkit-scrollbar-thumb { background: #ffd700; border: 2px solid #1a0a3e; }
@@ -464,6 +375,9 @@
 </head>
 <body>
   <canvas id="particle-canvas"></canvas>
+
+  <!-- Loading -->
+  <div id="loading-screen"><p>LOADING...</p></div>
 
   <!-- Level Up Overlay -->
   <div id="levelup-overlay" class="hidden">
@@ -482,68 +396,182 @@
 
   <!-- Affirmation Toast -->
   <div id="affirmation-toast"></div>
-
+  <!-- Error Toast -->
+  <div id="error-toast"></div>
   <!-- Combo Indicator -->
   <div id="combo-indicator"></div>
 
-  <div class="app">
-    <header>
+  <!-- ── AUTH SCREEN ─────────────────────────────────────────────────────── -->
+  <div id="auth-screen" class="hidden">
+    <div id="auth-logo">
       <h1>TASK BLOCKS</h1>
-      <p class="subtitle">★ smash tasks — earn xp — level up ★</p>
-    </header>
-
-    <!-- HUD Bar -->
-    <div id="hud-bar">
-      <div id="hud-level">
-        <span id="hud-level-badge">LV.1</span>
-        <span id="hud-level-name">MUSHROOM KINGDOM</span>
+      <p>★ complete tasks to level up ★</p>
+    </div>
+    <div id="auth-box">
+      <div id="auth-tabs">
+        <button id="tab-login"  class="auth-tab active">LOGIN</button>
+        <button id="tab-signup" class="auth-tab">SIGN UP</button>
       </div>
-      <div id="hud-xp-wrap">
-        <div id="hud-xp-bar-track"><div id="hud-xp-bar-fill"></div></div>
-        <span id="hud-xp-label">0 / 100 XP</span>
+      <div id="login-panel" class="auth-panel">
+        <input id="login-email"    class="auth-input" type="email"    placeholder="EMAIL...">
+        <input id="login-password" class="auth-input" type="password" placeholder="PASSWORD...">
+        <button id="login-btn" class="auth-btn">▶ CONTINUE</button>
+        <p id="login-err" class="auth-err"></p>
       </div>
-      <div id="hud-streak" data-active="false">
-        <span id="hud-streak-icon">—</span>
-        <span id="hud-streak-value">0</span>
-        <span id="hud-streak-label">DAY STREAK</span>
+      <div id="signup-panel" class="auth-panel hidden">
+        <input id="su-username" class="auth-input" type="text"     placeholder="USERNAME (3-16 CHARS)...">
+        <input id="su-email"    class="auth-input" type="email"    placeholder="EMAIL...">
+        <input id="su-password" class="auth-input" type="password" placeholder="PASSWORD (6+ CHARS)...">
+        <button id="signup-btn" class="auth-btn">★ CREATE HERO</button>
+        <p id="signup-err" class="auth-err"></p>
       </div>
     </div>
+  </div>
 
-    <!-- Stats Row -->
-    <div id="stats-row">
-      <div class="stat-block">
-        <span class="stat-num" id="stat-open">0</span>
-        <span class="stat-lbl">OPEN</span>
+  <!-- ── APP SCREEN ──────────────────────────────────────────────────────── -->
+  <div id="app-screen" class="hidden">
+    <div class="app">
+      <header>
+        <div id="header-left">
+          <canvas id="avatar-canvas" width="48" height="48"></canvas>
+        </div>
+        <div id="header-center">
+          <h1>TASK BLOCKS</h1>
+          <p class="subtitle">★ smash tasks — earn xp — level up ★</p>
+        </div>
+        <div id="header-right">
+          <span id="header-username">@PLAYER</span>
+          <button id="logout-btn">LOGOUT</button>
+        </div>
+      </header>
+
+      <!-- HUD Bar -->
+      <div id="hud-bar">
+        <div id="hud-level">
+          <span id="hud-level-badge">LV.1</span>
+          <span id="hud-level-name">MUSHROOM KINGDOM</span>
+        </div>
+        <div id="hud-xp-wrap">
+          <div id="hud-xp-bar-track"><div id="hud-xp-bar-fill"></div></div>
+          <span id="hud-xp-label">0 / 100 XP</span>
+        </div>
+        <div id="hud-streak" data-active="false">
+          <span id="hud-streak-icon">—</span>
+          <span id="hud-streak-value">0</span>
+          <span id="hud-streak-label">DAY STREAK</span>
+        </div>
       </div>
-      <div class="stat-block">
-        <span class="stat-num" id="stat-today">0</span>
-        <span class="stat-lbl">TODAY</span>
+
+      <!-- Stats Row -->
+      <div id="stats-row">
+        <div class="stat-block"><span class="stat-num" id="stat-open">0</span><span class="stat-lbl">OPEN</span></div>
+        <div class="stat-block"><span class="stat-num" id="stat-today">0</span><span class="stat-lbl">TODAY</span></div>
+        <div class="stat-block"><span class="stat-num" id="stat-total">0</span><span class="stat-lbl">ALL TIME</span></div>
+        <button id="analytics-toggle">STATS ▼</button>
       </div>
-      <div class="stat-block">
-        <span class="stat-num" id="stat-total">0</span>
-        <span class="stat-lbl">ALL TIME</span>
+
+      <!-- Analytics Panel -->
+      <div id="analytics-panel" class="hidden">
+        <h3>— RETROSPECTIVE —</h3>
+        <div id="chart-container"></div>
+        <p id="affirmation-msg"></p>
       </div>
-      <button id="analytics-toggle">STATS ▼</button>
-    </div>
 
-    <!-- Analytics Panel -->
-    <div id="analytics-panel" class="hidden">
-      <h3>— RETROSPECTIVE —</h3>
-      <div id="chart-container"></div>
-      <p id="affirmation-msg"></p>
-    </div>
+      <!-- Input -->
+      <div class="input-row">
+        <input type="text" id="task-input" placeholder="enter task name..." autocomplete="off">
+        <button id="add-btn">+ ADD</button>
+      </div>
 
-    <!-- Input -->
-    <div class="input-row">
-      <input type="text" id="task-input" placeholder="enter task name..." autocomplete="off">
-      <button id="add-btn">+ ADD</button>
-    </div>
+      <!-- Due Date Picker -->
+      <div id="due-pill-row">
+        <button class="due-pill active" data-val="none">NO DATE</button>
+        <button class="due-pill" data-val="today">TODAY</button>
+        <button class="due-pill" data-val="tomorrow">TOMORROW</button>
+        <button class="due-pill" data-val="week">THIS WEEK</button>
+        <button class="due-pill" data-val="custom">📅</button>
+        <input type="date" id="due-custom" class="hidden">
+      </div>
 
-    <div id="task-list"></div>
-    <p id="empty-state" style="display:none">NO TASKS YET.<br>ADD ONE ABOVE!</p>
+      <div id="task-list"></div>
+      <p id="empty-state" style="display:none">NO TASKS YET.<br>ADD ONE ABOVE!</p>
+
+      <!-- Archive -->
+      <button id="archive-toggle">📦 ARCHIVE ▼</button>
+      <div id="archive-panel" class="hidden">
+        <h3>— COMPLETED TASKS —</h3>
+        <div id="archive-list"></div>
+        <button id="archive-load-more" class="hidden">LOAD MORE ▼</button>
+        <p id="archive-empty" class="hidden">NO COMPLETED TASKS YET.</p>
+      </div>
+    </div>
   </div>
 
   <script>
+    /*
+    ╔══════════════════════════════════════════════════════════╗
+    ║  SUPABASE SETUP — run this SQL in your project's SQL editor
+    ║  supabase.com → your project → SQL Editor → New query
+    ╠══════════════════════════════════════════════════════════╣
+    ║
+    ║  CREATE TABLE profiles (
+    ║    id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+    ║    username TEXT NOT NULL UNIQUE,
+    ║    xp INTEGER NOT NULL DEFAULT 0,
+    ║    level INTEGER NOT NULL DEFAULT 1,
+    ║    streak INTEGER NOT NULL DEFAULT 0,
+    ║    last_active_date TEXT,
+    ║    last_completion_time BIGINT,
+    ║    current_combo INTEGER NOT NULL DEFAULT 0,
+    ║    daily_history JSONB NOT NULL DEFAULT '{}',
+    ║    total_completed INTEGER NOT NULL DEFAULT 0,
+    ║    unlocked_achievements TEXT[] NOT NULL DEFAULT '{}',
+    ║    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    ║  );
+    ║
+    ║  CREATE TABLE tasks (
+    ║    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    ║    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    ║    text TEXT NOT NULL,
+    ║    due_date TEXT,
+    ║    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    ║  );
+    ║
+    ║  CREATE TABLE archived_tasks (
+    ║    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    ║    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    ║    text TEXT NOT NULL,
+    ║    due_date TEXT,
+    ║    xp_earned INTEGER NOT NULL DEFAULT 0,
+    ║    completed_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    ║  );
+    ║  CREATE INDEX ON archived_tasks(user_id, completed_at DESC);
+    ║
+    ║  ALTER TABLE profiles       ENABLE ROW LEVEL SECURITY;
+    ║  ALTER TABLE tasks          ENABLE ROW LEVEL SECURITY;
+    ║  ALTER TABLE archived_tasks ENABLE ROW LEVEL SECURITY;
+    ║
+    ║  CREATE POLICY "own profile"  ON profiles       FOR ALL USING (auth.uid()=id)      WITH CHECK (auth.uid()=id);
+    ║  CREATE POLICY "own tasks"    ON tasks           FOR ALL USING (auth.uid()=user_id) WITH CHECK (auth.uid()=user_id);
+    ║  CREATE POLICY "own archive"  ON archived_tasks  FOR ALL USING (auth.uid()=user_id) WITH CHECK (auth.uid()=user_id);
+    ║
+    ║  CREATE OR REPLACE FUNCTION is_username_taken(uname TEXT)
+    ║  RETURNS BOOLEAN LANGUAGE SQL SECURITY DEFINER AS $$
+    ║    SELECT EXISTS (SELECT 1 FROM profiles WHERE username = uname);
+    ║  $$;
+    ║
+    ║  Also: Authentication → Settings → disable "Confirm email" for dev
+    ╚══════════════════════════════════════════════════════════╝
+    */
+
+    // ── CONFIG — paste your Supabase credentials here ────────────────────────
+    const SUPABASE_URL = 'https://YOUR_PROJECT.supabase.co';
+    const SUPABASE_KEY = 'YOUR_ANON_KEY';
+    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    let currentUser = null;
+    let tasks       = [];
+
     // ── Levels ────────────────────────────────────────────────────────────────
     const LEVELS = [
       { level: 1,  name: 'MUSHROOM KINGDOM', threshold: 0    },
@@ -557,43 +585,149 @@
       { level: 9,  name: 'PRINCESS RESCUER', threshold: 6150 },
       { level: 10, name: 'WORLD CHAMPION',   threshold: 8750 },
     ];
-
     function getLevel(xp) {
       let cur = LEVELS[0];
       for (const l of LEVELS) { if (xp >= l.threshold) cur = l; else break; }
       return cur;
     }
 
+    // ── Avatar Sprites ────────────────────────────────────────────────────────
+    const PALETTE = [
+      null,       // 0  transparent
+      '#1a0a3e',  // 1  deep purple / shadow
+      '#e83030',  // 2  red
+      '#ffd700',  // 3  gold
+      '#f5c87a',  // 4  skin
+      '#3a2800',  // 5  dark brown / outline
+      '#ffffff',  // 6  white
+      '#2ecc40',  // 7  green
+      '#c0392b',  // 8  dark red
+      '#b0b0b0',  // 9  silver
+      '#5c3d1e',  // 10 medium brown
+      '#0070d8',  // 11 blue
+      '#ff9900',  // 12 orange
+    ];
+
+    // Stage 1 — LV 1-2 — Mushroom
+    const SP1 = [
+      [0,0,0,8,8,8,8,8,8,0,0,0],
+      [0,0,8,8,8,8,8,8,8,8,0,0],
+      [0,8,8,6,8,8,8,8,6,8,8,0],
+      [8,8,8,6,8,8,8,8,6,8,8,8],
+      [8,8,8,8,8,8,8,8,8,8,8,8],
+      [5,5,8,8,8,8,8,8,8,8,5,5],
+      [0,0,4,4,4,4,4,4,4,4,0,0],
+      [0,0,4,5,4,4,4,4,5,4,0,0],
+      [0,0,4,4,5,5,5,5,4,4,0,0],
+      [0,0,4,4,4,4,4,4,4,4,0,0],
+      [0,5,4,4,0,0,0,0,4,4,5,0],
+      [0,5,5,0,0,0,0,0,5,5,0,0],
+    ];
+    // Stage 2 — LV 3-4 — Fire Fighter
+    const SP2 = [
+      [0,0,0,2,2,2,2,2,0,0,0,0],
+      [0,0,2,2,2,2,2,2,2,0,0,0],
+      [0,0,2,10,4,4,4,4,2,0,0,0],
+      [0,0,4,4,4,5,4,5,4,0,0,0],
+      [0,0,4,4,5,4,4,4,4,0,0,0],
+      [0,2,11,11,11,11,11,11,2,0,0,0],
+      [0,11,11,11,11,11,11,11,11,12,12,0],
+      [0,11,11,11,11,11,11,11,11,12,3,0],
+      [0,5,11,11,5,0,5,11,11,5,0,0],
+      [5,5,10,10,0,0,0,10,10,5,0,0],
+      [5,10,10,10,0,0,0,10,10,10,5,0],
+      [5,5,5,0,0,0,0,0,5,5,5,0],
+    ];
+    // Stage 3 — LV 5-6 — Star Power
+    const SP3 = [
+      [0,0,0,0,3,3,3,0,0,0,0,0],
+      [0,0,0,3,3,3,3,3,0,0,0,0],
+      [0,3,3,3,3,3,3,3,3,3,3,0],
+      [3,3,3,3,3,3,3,3,3,3,3,3],
+      [3,3,3,3,3,3,3,3,3,3,3,3],
+      [0,3,3,5,3,3,3,3,5,3,3,0],
+      [0,3,3,5,3,3,3,3,5,3,3,0],
+      [0,3,3,3,5,5,5,5,3,3,3,0],
+      [0,0,3,3,3,3,3,3,3,3,0,0],
+      [0,0,3,3,0,0,0,0,3,3,0,0],
+      [0,3,3,0,0,0,0,0,0,3,3,0],
+      [3,3,0,0,0,0,0,0,0,0,3,3],
+    ];
+    // Stage 4 — LV 7-8 — Koopa Warrior
+    const SP4 = [
+      [0,0,5,9,9,9,9,9,9,5,0,0],
+      [0,5,9,9,9,9,9,9,9,9,5,0],
+      [0,5,9,4,4,4,4,4,4,9,5,0],
+      [0,5,9,5,4,5,4,5,4,9,5,0],
+      [0,0,9,9,4,4,4,4,9,9,0,0],
+      [0,5,7,7,7,7,7,7,7,7,5,0],
+      [5,7,7,9,7,7,7,7,9,7,7,5],
+      [5,7,9,7,7,7,7,7,7,9,7,5],
+      [0,5,7,7,7,7,7,7,7,7,5,3],
+      [0,5,10,10,5,0,5,10,10,5,9,3],
+      [5,10,10,10,0,0,0,10,10,5,9,0],
+      [5,5,5,0,0,0,0,5,5,5,0,0],
+    ];
+    // Stage 5 — LV 9-10 — World Champion
+    const SP5 = [
+      [0,3,5,3,5,3,5,3,5,3,5,0],
+      [0,3,3,3,3,3,3,3,3,3,3,0],
+      [0,0,12,4,4,4,4,4,4,12,0,0],
+      [0,0,4,4,5,4,4,5,4,4,0,0],
+      [0,0,4,4,4,5,5,4,4,4,0,0],
+      [2,2,2,2,2,2,2,2,2,2,2,2],
+      [2,6,6,2,11,11,11,11,2,6,6,2],
+      [2,6,2,2,11,11,11,11,2,2,6,2],
+      [0,2,2,11,11,11,11,11,11,2,2,0],
+      [0,0,5,11,5,0,0,5,11,5,0,0],
+      [0,5,10,10,5,0,0,5,10,10,5,0],
+      [0,5,5,5,0,0,0,0,5,5,5,0],
+    ];
+    const SPRITES = [SP1, SP2, SP3, SP4, SP5];
+
+    function renderAvatar(level) {
+      const canvas = document.getElementById('avatar-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      ctx.imageSmoothingEnabled = false;
+      ctx.clearRect(0, 0, 48, 48);
+      // Dark background
+      ctx.fillStyle = '#0d061f';
+      ctx.fillRect(0, 0, 48, 48);
+      const stage  = Math.min(Math.floor((level - 1) / 2), 4);
+      const sprite = SPRITES[stage];
+      const PX = 4;
+      for (let r = 0; r < 12; r++) {
+        for (let c = 0; c < 12; c++) {
+          const ci = sprite[r][c];
+          if (!ci) continue;
+          ctx.fillStyle = PALETTE[ci];
+          ctx.fillRect(c * PX, r * PX, PX, PX);
+        }
+      }
+    }
+
     // ── Achievements ──────────────────────────────────────────────────────────
     const ACHIEVEMENTS = {
-      first_coin:      { name: 'FIRST COIN!',     desc: 'You completed your very first task!' },
-      coin_rush:       { name: 'COIN RUSH',        desc: '5 tasks crushed in a single day!' },
-      fire_power:      { name: 'FIRE POWER',       desc: '3-day streak! You\'re heating up!' },
-      star_man:        { name: 'STAR MAN',         desc: '7-day streak! Totally invincible!' },
-      speed_runner:    { name: 'SPEED RUNNER',     desc: '3-task combo! Lightning fast!' },
-      combo_king:      { name: 'COMBO KING',       desc: 'x5 combo achieved! Legendary!' },
-      castle_cleared:  { name: 'CASTLE CLEARED',   desc: '25 total tasks destroyed!' },
-      world_8_1:       { name: 'WORLD 8-1',        desc: '100 tasks! You\'re unstoppable!' },
-      unstoppable:     { name: 'UNSTOPPABLE',      desc: '30-day streak. Pure dedication.' },
-      level_up_legend: { name: 'LEVEL UP LEGEND',  desc: 'Reached Level 5: Star Power!' },
+      first_coin:      { name: 'FIRST COIN!',    desc: 'Completed your very first task!' },
+      coin_rush:       { name: 'COIN RUSH',       desc: '5 tasks crushed in a single day!' },
+      fire_power:      { name: 'FIRE POWER',      desc: '3-day streak! You\'re heating up!' },
+      star_man:        { name: 'STAR MAN',        desc: '7-day streak! Totally invincible!' },
+      speed_runner:    { name: 'SPEED RUNNER',    desc: '3-task combo! Lightning fast!' },
+      combo_king:      { name: 'COMBO KING',      desc: 'x5 combo achieved! Legendary!' },
+      castle_cleared:  { name: 'CASTLE CLEARED',  desc: '25 total tasks destroyed!' },
+      world_8_1:       { name: 'WORLD 8-1',       desc: '100 tasks! You\'re unstoppable!' },
+      unstoppable:     { name: 'UNSTOPPABLE',     desc: '30-day streak. Pure dedication.' },
+      level_up_legend: { name: 'LEVEL UP LEGEND', desc: 'Reached Level 5: Star Power!' },
     };
 
     // ── Affirmations ──────────────────────────────────────────────────────────
     const AFFIRMATIONS = [
-      "IT'S-A ME, PRODUCTIVITY!",
-      "WAHOO! TASK DESTROYED!",
-      "PRINCESS APPROVED!",
-      "COIN COLLECTED! KEEP GOING!",
-      "BOWSER WOULD BE SCARED!",
-      "ANOTHER BLOCK SMASHED!",
-      "YOU'RE ON FIRE!",
-      "LEVEL GRINDER DETECTED!",
-      "MUSHROOM POWER ACTIVATED!",
-      "LAKITU IS IMPRESSED!",
-      "TOAD SAYS: THANK YOU!",
-      "WORLD RECORD PACE!",
-      "POW BLOCK INCOMING!",
-      "1-UP ENERGY FOUND!",
+      "IT'S-A ME, PRODUCTIVITY!", "WAHOO! TASK DESTROYED!", "PRINCESS APPROVED!",
+      "COIN COLLECTED! KEEP GOING!", "BOWSER WOULD BE SCARED!", "ANOTHER BLOCK SMASHED!",
+      "YOU'RE ON FIRE!", "LEVEL GRINDER DETECTED!", "MUSHROOM POWER ACTIVATED!",
+      "LAKITU IS IMPRESSED!", "TOAD SAYS: THANK YOU!", "WORLD RECORD PACE!",
+      "POW BLOCK INCOMING!", "1-UP ENERGY FOUND!",
     ];
     let affirmIdx = 0;
 
@@ -602,59 +736,38 @@
 
     // ── Gamification State ────────────────────────────────────────────────────
     const DEFAULT_G = {
-      xp: 0, level: 1, streak: 0,
-      lastActiveDate: null, lastCompletionTime: null, currentCombo: 0,
+      xp: 0, level: 1, streak: 0, lastActiveDate: null,
+      lastCompletionTime: null, currentCombo: 0,
       dailyHistory: {}, totalCompleted: 0, unlockedAchievements: []
     };
     let g = { ...DEFAULT_G };
 
-    function loadG() {
-      try {
-        const s = JSON.parse(localStorage.getItem('todo-gamification'));
-        if (s) g = { ...DEFAULT_G, ...s };
-      } catch {}
-      checkStreakReset();
-    }
-
-    function saveG() {
-      // prune history older than 8 days
-      const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 8);
-      for (const k of Object.keys(g.dailyHistory))
-        if (new Date(k) < cutoff) delete g.dailyHistory[k];
-      localStorage.setItem('todo-gamification', JSON.stringify(g));
-    }
-
     function checkStreakReset() {
       if (!g.lastActiveDate) return;
-      const diff = Math.round(
-        (new Date(todayStr()) - new Date(g.lastActiveDate)) / 86400000
-      );
+      const diff = Math.round((new Date(todayStr()) - new Date(g.lastActiveDate)) / 86400000);
       if (diff > 1) g.streak = 0;
     }
 
     function calcXP(streak, combo) {
-      const base  = 30;
       const sMult = streak >= 30 ? 2.5 : streak >= 14 ? 2.0 : streak >= 7 ? 1.5 : streak >= 3 ? 1.2 : 1.0;
       const cMult = combo  >= 5  ? 2.5 : combo  === 4 ? 2.0 : combo  === 3 ? 1.6 : combo  === 2 ? 1.3 : 1.0;
-      return Math.round(base * sMult * cMult);
+      return Math.round(30 * sMult * cMult);
     }
 
     function updateCombo() {
       const now = Date.now();
-      if (g.lastCompletionTime && (now - g.lastCompletionTime) < 20000)
-        g.currentCombo++;
-      else
-        g.currentCombo = 1;
+      if (g.lastCompletionTime && (now - g.lastCompletionTime) < 20000) g.currentCombo++;
+      else g.currentCombo = 1;
       g.lastCompletionTime = now;
       return g.currentCombo;
     }
 
     function awardXP(amount) {
-      const oldLevel = getLevel(g.xp);
+      const old = getLevel(g.xp);
       g.xp += amount;
-      const newLevel = getLevel(g.xp);
-      g.level = newLevel.level;
-      return { leveledUp: newLevel.level > oldLevel.level, newLevel };
+      const nw = getLevel(g.xp);
+      g.level = nw.level;
+      return { leveledUp: nw.level > old.level, newLevel: nw };
     }
 
     function updateStreak() {
@@ -665,6 +778,12 @@
     function updateDailyHistory() {
       const today = todayStr();
       g.dailyHistory[today] = (g.dailyHistory[today] || 0) + 1;
+    }
+
+    function pruneDailyHistory() {
+      const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 8);
+      for (const k of Object.keys(g.dailyHistory))
+        if (new Date(k) < cutoff) delete g.dailyHistory[k];
     }
 
     function checkAchievements() {
@@ -686,32 +805,225 @@
       return newly;
     }
 
-    // ── Task State ────────────────────────────────────────────────────────────
-    const state = {
-      tasks: [],
-      load() {
-        try { this.tasks = JSON.parse(localStorage.getItem('todo-tasks')) || []; }
-        catch { this.tasks = []; }
-      },
-      save() { localStorage.setItem('todo-tasks', JSON.stringify(this.tasks)); },
-      add(text) {
-        this.tasks.push({ id: crypto.randomUUID(), text, createdAt: Date.now() });
-        this.save();
-      },
-      remove(id) { this.tasks = this.tasks.filter(t => t.id !== id); this.save(); }
-    };
+    // ── Supabase Profile ──────────────────────────────────────────────────────
+    async function syncProfile() {
+      const { data } = await sb.from('profiles').select('*').eq('id', currentUser.id).single();
+      if (!data) return;
+      g.xp                   = data.xp;
+      g.level                = data.level;
+      g.streak               = data.streak;
+      g.lastActiveDate       = data.last_active_date;
+      g.lastCompletionTime   = data.last_completion_time;
+      g.currentCombo         = data.current_combo;
+      g.dailyHistory         = data.daily_history || {};
+      g.totalCompleted       = data.total_completed;
+      g.unlockedAchievements = data.unlocked_achievements || [];
+      checkStreakReset();
+      document.getElementById('header-username').textContent = '@' + data.username;
+      renderHUD();
+      renderStats();
+    }
+
+    async function saveProfile() {
+      pruneDailyHistory();
+      await sb.from('profiles').update({
+        xp: g.xp, level: g.level, streak: g.streak,
+        last_active_date: g.lastActiveDate,
+        last_completion_time: g.lastCompletionTime,
+        current_combo: g.currentCombo,
+        daily_history: g.dailyHistory,
+        total_completed: g.totalCompleted,
+        unlocked_achievements: g.unlockedAchievements,
+      }).eq('id', currentUser.id);
+    }
+
+    // ── Task Operations ───────────────────────────────────────────────────────
+    async function loadTasks() {
+      const { data, error } = await sb.from('tasks')
+        .select('id, text, due_date, created_at')
+        .eq('user_id', currentUser.id)
+        .order('created_at', { ascending: true });
+      if (!error) tasks = data || [];
+      renderTasks();
+    }
+
+    let selectedDueDate = null;
+
+    async function addTask() {
+      const text = document.getElementById('task-input').value.trim();
+      if (!text) return;
+      playAdd();
+      const dueDate = selectedDueDate;
+      // Optimistic
+      const opt = { id: crypto.randomUUID(), text, due_date: dueDate, created_at: new Date().toISOString(), _opt: true };
+      tasks.push(opt);
+      document.getElementById('task-input').value = '';
+      resetDuePicker();
+      document.getElementById('task-input').focus();
+      renderTasks();
+      // DB
+      const { data, error } = await sb.from('tasks')
+        .insert({ user_id: currentUser.id, text, due_date: dueDate })
+        .select().single();
+      if (error) {
+        tasks = tasks.filter(t => t.id !== opt.id);
+        renderTasks();
+        showErrorToast('SAVE FAILED. CHECK CONNECTION.');
+        return;
+      }
+      tasks = tasks.map(t => t.id === opt.id ? data : t);
+      renderTasks();
+    }
+
+    async function completeTask(taskId, card) {
+      const task = tasks.find(t => t.id === taskId);
+      if (!task) return;
+
+      const combo = updateCombo();
+      const xp    = calcXP(g.streak, combo);
+      updateStreak();
+      updateDailyHistory();
+      g.totalCompleted++;
+      const { leveledUp, newLevel } = awardXP(xp);
+      const newAch = checkAchievements();
+
+      playCoin();
+      explodeCard(card);
+      card.classList.add('exploding');
+      showXPPopup(xp, combo, card);
+      showAffirmationToast();
+      if (combo >= 2) { playCombo(combo); showComboIndicator(combo); }
+      renderHUD();
+
+      setTimeout(async () => {
+        tasks = tasks.filter(t => t.id !== taskId);
+        renderTasks();
+        if (leveledUp)     { playLevelUp(); showLevelUp(newLevel); }
+        if (newAch.length) { playAchievement(); queueAchievements(newAch); }
+        await Promise.all([
+          sb.from('tasks').delete().eq('id', taskId),
+          sb.from('archived_tasks').insert({
+            user_id: currentUser.id, text: task.text,
+            due_date: task.due_date || null, xp_earned: xp,
+          }),
+          saveProfile(),
+        ]);
+        // Invalidate archive cache
+        archiveState.loaded = false;
+      }, 350);
+    }
+
+    // ── Due Date Helpers ──────────────────────────────────────────────────────
+    function pillToDate(val) {
+      const d = new Date();
+      if (val === 'today')    return d.toISOString().slice(0, 10);
+      if (val === 'tomorrow') { d.setDate(d.getDate() + 1); return d.toISOString().slice(0, 10); }
+      if (val === 'week')     { d.setDate(d.getDate() + 7); return d.toISOString().slice(0, 10); }
+      return null;
+    }
+
+    function dueBadgeInfo(dueDateStr) {
+      if (!dueDateStr) return null;
+      const today    = new Date(); today.setHours(0,0,0,0);
+      const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
+      const due      = new Date(dueDateStr + 'T00:00:00');
+      if (due < today)                       return { label: 'OVERDUE',   bg: '#e83030', fg: '#fff' };
+      if (due.getTime() === today.getTime()) return { label: 'TODAY',     bg: '#ff9900', fg: '#fff' };
+      if (due.getTime() === tomorrow.getTime()) return { label: 'TOMORROW', bg: '#d4c000', fg: '#3a2800' };
+      const mn = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+      return { label: `${mn[due.getMonth()]} ${due.getDate()}`, bg: '#333', fg: '#ccc' };
+    }
+
+    function resetDuePicker() {
+      selectedDueDate = null;
+      document.querySelectorAll('.due-pill').forEach(b => b.classList.remove('active'));
+      document.querySelector('.due-pill[data-val="none"]').classList.add('active');
+      document.getElementById('due-custom').classList.add('hidden');
+      document.getElementById('due-custom').value = '';
+    }
+
+    // ── Task Sort ─────────────────────────────────────────────────────────────
+    function sortedTasks() {
+      const today    = new Date(); today.setHours(0,0,0,0);
+      const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
+      function urgency(t) {
+        if (!t.due_date) return 4;
+        const d = new Date(t.due_date + 'T00:00:00');
+        if (d < today)                         return 0;
+        if (d.getTime() === today.getTime())   return 1;
+        if (d.getTime() === tomorrow.getTime()) return 2;
+        return 3;
+      }
+      return [...tasks].sort((a, b) => {
+        const ua = urgency(a), ub = urgency(b);
+        if (ua !== ub) return ua - ub;
+        if (a.due_date && b.due_date) return a.due_date.localeCompare(b.due_date);
+        return a.created_at.localeCompare(b.created_at);
+      });
+    }
+
+    // ── Archive ───────────────────────────────────────────────────────────────
+    const archiveState = { loaded: false, items: [], offset: 0, pageSize: 50, hasMore: true };
+
+    async function loadArchivePage() {
+      if (!archiveState.hasMore) return;
+      const { data, error } = await sb.from('archived_tasks')
+        .select('id, text, due_date, xp_earned, completed_at')
+        .eq('user_id', currentUser.id)
+        .order('completed_at', { ascending: false })
+        .range(archiveState.offset, archiveState.offset + archiveState.pageSize - 1);
+      if (error || !data) return;
+      archiveState.items.push(...data);
+      archiveState.offset += data.length;
+      archiveState.loaded  = true;
+      archiveState.hasMore = data.length === archiveState.pageSize;
+      renderArchive();
+    }
+
+    function renderArchive() {
+      const list    = document.getElementById('archive-list');
+      const loadBtn = document.getElementById('archive-load-more');
+      const emptyEl = document.getElementById('archive-empty');
+      list.innerHTML = '';
+      if (!archiveState.items.length) {
+        emptyEl.classList.remove('hidden'); loadBtn.classList.add('hidden'); return;
+      }
+      emptyEl.classList.add('hidden');
+      archiveState.items.forEach(item => {
+        const row  = document.createElement('div'); row.className = 'archive-row';
+        const date = new Date(item.completed_at).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+        const text = document.createElement('div'); text.className = 'archive-text'; text.textContent = item.text.toUpperCase();
+        const meta = document.createElement('div'); meta.className = 'archive-meta';
+        meta.textContent = `+${item.xp_earned} XP · ${date}` + (item.due_date ? ` · DUE ${item.due_date}` : '');
+        row.appendChild(text); row.appendChild(meta);
+        list.appendChild(row);
+      });
+      loadBtn.classList.toggle('hidden', !archiveState.hasMore);
+    }
+
+    function resetArchiveState() {
+      Object.assign(archiveState, { loaded: false, items: [], offset: 0, hasMore: true });
+      const list = document.getElementById('archive-list');
+      if (list) list.innerHTML = '';
+      const panel = document.getElementById('archive-panel');
+      if (panel) { panel.classList.add('hidden'); }
+      const toggle = document.getElementById('archive-toggle');
+      if (toggle) toggle.textContent = '📦 ARCHIVE ▼';
+    }
 
     // ── Renderers ─────────────────────────────────────────────────────────────
-    const taskListEl = document.getElementById('task-list');
-    const emptyState = document.getElementById('empty-state');
-
-    function render() {
-      taskListEl.innerHTML = '';
-      emptyState.style.display = state.tasks.length === 0 ? 'block' : 'none';
-      state.tasks.forEach(task => {
+    function renderTasks() {
+      const list  = document.getElementById('task-list');
+      const empty = document.getElementById('empty-state');
+      list.innerHTML = '';
+      empty.style.display = tasks.length === 0 ? 'block' : 'none';
+      sortedTasks().forEach(task => {
         const card = document.createElement('div');
         card.className = 'task-card';
-        card.dataset.id = task.id;
+        if (task._opt) card.style.opacity = '0.7';
+        const info = dueBadgeInfo(task.due_date);
+        if (info?.label === 'OVERDUE')  card.classList.add('overdue');
+        if (info?.label === 'TODAY')    card.classList.add('due-today');
 
         const span = document.createElement('span');
         span.className = 'task-text';
@@ -720,38 +1032,46 @@
         const btn = document.createElement('button');
         btn.className = 'done-btn';
         btn.textContent = '★ DONE';
-        btn.addEventListener('click', () => onTaskDone(card, task.id));
+        if (!task._opt) btn.addEventListener('click', () => completeTask(task.id, card));
+        else btn.disabled = true;
 
         card.appendChild(span);
+        if (info) {
+          const badge = document.createElement('span');
+          badge.className = 'due-badge';
+          badge.textContent = info.label;
+          badge.style.background = info.bg;
+          badge.style.color = info.fg;
+          card.appendChild(badge);
+        }
         card.appendChild(btn);
-        taskListEl.appendChild(card);
+        list.appendChild(card);
       });
       renderStats();
     }
 
     function renderHUD() {
       const cur  = getLevel(g.xp);
-      const next = LEVELS[cur.level]; // cur.level is 1-10; LEVELS is 0-indexed so LEVELS[1] = level 2
+      const next = LEVELS[cur.level];
       let pct = 100, label = `${g.xp} XP (MAX)`;
       if (next) {
-        const xpIn   = g.xp - cur.threshold;
-        const xpNeed = next.threshold - cur.threshold;
-        pct   = Math.min((xpIn / xpNeed) * 100, 100);
+        const xpIn = g.xp - cur.threshold, xpNeed = next.threshold - cur.threshold;
+        pct = Math.min((xpIn / xpNeed) * 100, 100);
         label = `${xpIn} / ${xpNeed} XP`;
       }
       document.getElementById('hud-level-badge').textContent = `LV.${cur.level}`;
       document.getElementById('hud-level-name').textContent  = cur.name;
       document.getElementById('hud-xp-bar-fill').style.width = `${pct}%`;
       document.getElementById('hud-xp-label').textContent    = label;
-
-      const streakEl = document.getElementById('hud-streak');
-      streakEl.dataset.active = g.streak > 0 ? 'true' : 'false';
+      const s = document.getElementById('hud-streak');
+      s.dataset.active = g.streak > 0 ? 'true' : 'false';
       document.getElementById('hud-streak-value').textContent = g.streak;
       document.getElementById('hud-streak-icon').textContent  = g.streak > 0 ? '🔥' : '—';
+      renderAvatar(g.level);
     }
 
     function renderStats() {
-      document.getElementById('stat-open').textContent  = state.tasks.length;
+      document.getElementById('stat-open').textContent  = tasks.length;
       document.getElementById('stat-today').textContent = g.dailyHistory[todayStr()] || 0;
       document.getElementById('stat-total').textContent = g.totalCompleted;
     }
@@ -761,96 +1081,80 @@
       container.innerHTML = '';
       const today = todayStr();
       const DAY   = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
-      const days  = Array.from({ length: 7 }, (_, i) => {
-        const d = new Date(); d.setDate(d.getDate() - (6 - i)); return d;
-      });
+      const days  = Array.from({ length: 7 }, (_, i) => { const d = new Date(); d.setDate(d.getDate() - (6 - i)); return d; });
       const counts = days.map(d => g.dailyHistory[d.toISOString().slice(0,10)] || 0);
       const max    = Math.max(...counts, 1);
-
       days.forEach((d, i) => {
-        const dateStr = d.toISOString().slice(0,10);
-        const count   = counts[i];
-        const isToday = dateStr === today;
-        const barH    = count > 0 ? Math.max((count / max) * 68, 8) : 0;
-
-        const col      = document.createElement('div'); col.className = 'chart-col';
-        const countLbl = document.createElement('span');
-        countLbl.className = 'chart-count';
-        countLbl.textContent = count > 0 ? count : '';
+        const ds = d.toISOString().slice(0,10), count = counts[i], isToday = ds === today;
+        const col = document.createElement('div'); col.className = 'chart-col';
+        const cl  = document.createElement('span'); cl.className = 'chart-count'; cl.textContent = count || '';
         const bar = document.createElement('div');
-        bar.className = 'chart-bar' + (isToday ? ' today' : '') + (count === 0 ? ' zero' : '');
-        bar.style.height = count > 0 ? `${barH}px` : '4px';
-        const dayLbl = document.createElement('span');
-        dayLbl.className = 'chart-day';
-        dayLbl.textContent = DAY[d.getDay()];
-
-        col.appendChild(countLbl); col.appendChild(bar); col.appendChild(dayLbl);
-        container.appendChild(col);
+        bar.className = 'chart-bar' + (isToday ? ' today' : '') + (!count ? ' zero' : '');
+        bar.style.height = count ? `${Math.max((count/max)*68, 8)}px` : '4px';
+        const dl = document.createElement('span'); dl.className = 'chart-day'; dl.textContent = DAY[d.getDay()];
+        col.append(cl, bar, dl); container.appendChild(col);
       });
-
-      document.getElementById('affirmation-msg').textContent =
-        AFFIRMATIONS[affirmIdx++ % AFFIRMATIONS.length];
+      document.getElementById('affirmation-msg').textContent = AFFIRMATIONS[affirmIdx++ % AFFIRMATIONS.length];
     }
 
-    // ── Task Completion ───────────────────────────────────────────────────────
-    function onTaskDone(card, id) {
-      const combo = updateCombo();
-      const xp    = calcXP(g.streak, combo);
-      updateStreak();
-      updateDailyHistory();
-      g.totalCompleted++;
-      const { leveledUp, newLevel } = awardXP(xp);
-      const newAch = checkAchievements();
-      saveG();
-
-      // Immediate effects
-      playCoin();
-      explodeCard(card);
-      card.classList.add('exploding');
-      showXPPopup(xp, combo, card);
-      showAffirmationToast();
-      if (combo >= 2) { playCombo(combo); showComboIndicator(combo); }
-      renderHUD();
-
-      // After card animation
-      setTimeout(() => {
-        state.remove(id);
-        render();
-        if (leveledUp)     { playLevelUp(); showLevelUp(newLevel); }
-        if (newAch.length) { playAchievement(); queueAchievements(newAch); }
-      }, 350);
+    // ── Auth Functions ────────────────────────────────────────────────────────
+    function setAuthBusy(busy) {
+      document.querySelectorAll('.auth-btn, .auth-input').forEach(el => el.classList.toggle('auth-busy', busy));
     }
 
-    // ── Add Task ──────────────────────────────────────────────────────────────
-    const inputEl = document.getElementById('task-input');
-    document.getElementById('add-btn').addEventListener('click', addTask);
-    inputEl.addEventListener('keydown', e => { if (e.key === 'Enter') addTask(); });
-
-    function addTask() {
-      const text = inputEl.value.trim();
-      if (!text) return;
-      playAdd();
-      state.add(text);
-      inputEl.value = '';
-      inputEl.focus();
-      render();
+    async function handleLogin() {
+      const email = document.getElementById('login-email').value.trim();
+      const pass  = document.getElementById('login-password').value;
+      document.getElementById('login-err').textContent = '';
+      if (!email || !pass) { document.getElementById('login-err').textContent = 'FILL IN ALL FIELDS.'; return; }
+      setAuthBusy(true);
+      const { error } = await sb.auth.signInWithPassword({ email, password: pass });
+      setAuthBusy(false);
+      if (error) document.getElementById('login-err').textContent = 'WRONG EMAIL OR PASSWORD.';
     }
 
-    // ── Analytics Toggle ──────────────────────────────────────────────────────
-    document.getElementById('analytics-toggle').addEventListener('click', () => {
-      const panel = document.getElementById('analytics-panel');
-      const open  = !panel.classList.contains('hidden');
-      panel.classList.toggle('hidden', open);
-      document.getElementById('analytics-toggle').textContent = open ? 'STATS ▼' : 'STATS ▲';
-      if (!open) renderChart();
-    });
+    async function handleSignup() {
+      const username = document.getElementById('su-username').value.trim().toUpperCase().replace(/\s+/g,'_');
+      const email    = document.getElementById('su-email').value.trim();
+      const pass     = document.getElementById('su-password').value;
+      const errEl    = document.getElementById('signup-err');
+      errEl.textContent = '';
+      if (username.length < 3 || username.length > 16) { errEl.textContent = 'USERNAME: 3-16 CHARS.'; return; }
+      if (!/^[A-Z0-9_]+$/.test(username)) { errEl.textContent = 'USERNAME: LETTERS, NUMBERS, _ ONLY.'; return; }
+      if (pass.length < 6) { errEl.textContent = 'PASSWORD: MIN 6 CHARS.'; return; }
+      setAuthBusy(true);
+      const { data: taken } = await sb.rpc('is_username_taken', { uname: username });
+      if (taken) { errEl.textContent = 'USERNAME TAKEN! TRY ANOTHER.'; setAuthBusy(false); return; }
+      const { data, error } = await sb.auth.signUp({ email, password: pass });
+      if (error) { errEl.textContent = error.message.toUpperCase().slice(0,60); setAuthBusy(false); return; }
+      await sb.from('profiles').insert({
+        id: data.user.id, username,
+        xp: 0, level: 1, streak: 0, total_completed: 0
+      });
+      setAuthBusy(false);
+      // onAuthStateChange fires next
+    }
+
+    async function handleLogout() {
+      g = { ...DEFAULT_G };
+      tasks = [];
+      resetArchiveState();
+      await sb.auth.signOut();
+    }
+
+    // ── Screen Management ─────────────────────────────────────────────────────
+    function showScreen(id) {
+      document.getElementById('loading-screen').classList.add('hidden');
+      document.getElementById('auth-screen').classList.toggle('hidden', id !== 'auth');
+      document.getElementById('app-screen').classList.toggle('hidden', id !== 'app');
+    }
 
     // ── UI Effects ────────────────────────────────────────────────────────────
     function showXPPopup(xp, combo, cardEl) {
       const rect = cardEl.getBoundingClientRect();
       const el   = document.createElement('div');
       el.className   = 'xp-popup';
-      el.textContent = combo >= 2 ? `+${xp} XP  x${combo}!` : `+${xp} XP`;
+      el.textContent = combo >= 2 ? `+${xp} XP x${combo}!` : `+${xp} XP`;
       el.style.left  = `${rect.left + rect.width / 2 - 50}px`;
       el.style.top   = `${rect.top - 8}px`;
       document.body.appendChild(el);
@@ -864,183 +1168,179 @@
       setTimeout(() => el.classList.remove('show'), 1900);
     }
 
+    function showErrorToast(msg) {
+      const el = document.getElementById('error-toast');
+      el.textContent = msg;
+      el.classList.add('show');
+      setTimeout(() => el.classList.remove('show'), 3000);
+    }
+
     let comboTimer = null;
     function showComboIndicator(combo) {
-      const el     = document.getElementById('combo-indicator');
-      const colors = ['#ffffff', '#ffaa00', '#ff4040', '#ffd700', '#ff00ff'];
-      const sizes  = ['0.9rem', '1.1rem', '1.2rem', '1.3rem', '1.5rem'];
-      const idx    = Math.min(combo - 2, colors.length - 1);
-      el.textContent   = `x${combo} COMBO!`;
-      el.style.color   = colors[idx];
-      el.style.fontSize = sizes[idx];
-      el.style.textShadow = `3px 3px 0 rgba(0,0,0,0.7)`;
-      // Force restart
-      el.classList.remove('show');
-      void el.offsetWidth;
-      el.classList.add('show');
+      const el = document.getElementById('combo-indicator');
+      const colors = ['#fff','#ffaa00','#ff4040','#ffd700','#ff00ff'];
+      el.textContent = `x${combo} COMBO!`;
+      el.style.color = colors[Math.min(combo-2, colors.length-1)];
+      el.style.fontSize = `${0.9 + Math.min(combo-2,3)*0.15}rem`;
+      el.classList.remove('show'); void el.offsetWidth; el.classList.add('show');
       clearTimeout(comboTimer);
       comboTimer = setTimeout(() => el.classList.remove('show'), 1000);
     }
 
     let achQueue = [], achBusy = false;
-    function queueAchievements(list) {
-      achQueue.push(...list);
-      if (!achBusy) nextAchievement();
-    }
-    function nextAchievement() {
+    function queueAchievements(list) { achQueue.push(...list); if (!achBusy) nextAch(); }
+    function nextAch() {
       if (!achQueue.length) { achBusy = false; return; }
       achBusy = true;
       const a = ACHIEVEMENTS[achQueue.shift().id];
       document.getElementById('ach-name').textContent = `★ ${a.name}`;
       document.getElementById('ach-desc').textContent = a.desc;
-      const toast = document.getElementById('ach-toast');
-      toast.classList.add('up');
-      setTimeout(() => { toast.classList.remove('up'); setTimeout(nextAchievement, 600); }, 3600);
+      document.getElementById('ach-toast').classList.add('up');
+      setTimeout(() => { document.getElementById('ach-toast').classList.remove('up'); setTimeout(nextAch, 600); }, 3600);
     }
 
-    // ── Level Up Overlay ──────────────────────────────────────────────────────
     let luTimer = null;
     function showLevelUp(lvl) {
       document.getElementById('lu-badge').textContent = `LV.${lvl.level}`;
       document.getElementById('lu-name').textContent  = lvl.name;
       document.getElementById('levelup-overlay').classList.remove('hidden');
-
-      explodeAt(window.innerWidth / 2, window.innerHeight / 2, 70);
-      const pts = [
-        [120, 120], [window.innerWidth - 120, 120],
-        [120, window.innerHeight - 120], [window.innerWidth - 120, window.innerHeight - 120],
-        [window.innerWidth / 2, 60]
-      ];
-      pts.forEach(([x, y], i) => setTimeout(() => explodeAt(x, y, 25), 120 + i * 120));
-
+      explodeAt(window.innerWidth/2, window.innerHeight/2, 70);
+      [[120,120],[window.innerWidth-120,120],[120,window.innerHeight-120],[window.innerWidth-120,window.innerHeight-120],[window.innerWidth/2,60]]
+        .forEach(([x,y],i) => setTimeout(() => explodeAt(x,y,25), 120+i*120));
       clearTimeout(luTimer);
-      luTimer = setTimeout(closeLevelUp, 5500);
+      luTimer = setTimeout(() => document.getElementById('levelup-overlay').classList.add('hidden'), 5500);
     }
-    function closeLevelUp() {
+    document.getElementById('lu-btn').addEventListener('click', () => {
       clearTimeout(luTimer);
       document.getElementById('levelup-overlay').classList.add('hidden');
-    }
-    document.getElementById('lu-btn').addEventListener('click', closeLevelUp);
+    });
 
-    // ── Particle Engine ───────────────────────────────────────────────────────
-    const canvas = document.getElementById('particle-canvas');
-    const ctx    = canvas.getContext('2d');
-    let particles = [];
-
-    function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-    window.addEventListener('resize', resizeCanvas);
-    resizeCanvas();
-
-    const COIN_COLORS  = ['#ffd700','#ffec6e','#ffc200','#ffe566','#fff8a0'];
-    const CHUNK_COLORS = ['#e8b800','#a07800','#ffe85c','#3a2800','#c49000'];
-
-    function explodeCard(el) {
-      const r = el.getBoundingClientRect();
-      explodeAt(r.left + r.width / 2, r.top + r.height / 2, 28);
-    }
-
-    function explodeAt(cx, cy, count) {
-      const coins = Math.floor(count * 0.35);
-      for (let i = 0; i < coins; i++) {
-        particles.push({
-          type:'coin', x: cx + (Math.random()-0.5)*60, y: cy,
-          vx:(Math.random()-0.5)*5, vy:-(7+Math.random()*8),
-          size:7+Math.random()*7, color:COIN_COLORS[~~(Math.random()*COIN_COLORS.length)],
-          alpha:1, rotation:Math.random()*Math.PI*2, rotSpeed:0.14+Math.random()*0.2, gravity:0.38
-        });
-      }
-      for (let i = 0; i < count - coins; i++) {
-        const a = Math.random()*Math.PI*2, s = 3+Math.random()*9;
-        particles.push({
-          type:'chunk', x:cx+(Math.random()-0.5)*44, y:cy+(Math.random()-0.5)*20,
-          vx:Math.cos(a)*s, vy:Math.sin(a)*s-3,
-          size:5+Math.random()*11, color:CHUNK_COLORS[~~(Math.random()*CHUNK_COLORS.length)],
-          alpha:1, rotation:Math.random()*Math.PI*2, rotSpeed:(Math.random()-0.5)*0.3, gravity:0.3
-        });
-      }
-    }
-
-    function animateParticles() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      for (let i = particles.length - 1; i >= 0; i--) {
-        const p = particles[i];
-        p.vy += p.gravity; p.x += p.vx; p.y += p.vy;
-        p.rotation += p.rotSpeed; p.alpha -= 0.016;
-        if (p.alpha <= 0.01) { particles.splice(i, 1); continue; }
-        ctx.save(); ctx.globalAlpha = p.alpha;
-        if (p.type === 'coin') {
-          ctx.translate(p.x, p.y);
-          ctx.scale(Math.abs(Math.cos(p.rotation)), 1);
-          ctx.fillStyle = p.color;
-          ctx.beginPath(); ctx.arc(0, 0, p.size, 0, Math.PI*2); ctx.fill();
-          ctx.fillStyle = 'rgba(255,255,200,0.5)';
-          ctx.beginPath(); ctx.arc(-p.size*0.25, -p.size*0.25, p.size*0.35, 0, Math.PI*2); ctx.fill();
-        } else {
-          ctx.translate(p.x, p.y); ctx.rotate(p.rotation);
-          ctx.fillStyle = p.color;
-          ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size);
-          ctx.fillStyle = 'rgba(255,255,255,0.35)';
-          ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size*0.28);
-          ctx.fillRect(-p.size/2, -p.size/2, p.size*0.28, p.size);
-        }
-        ctx.restore();
-      }
-      requestAnimationFrame(animateParticles);
-    }
-
-    // ── Sound Engine ─────────────────────────────────────────────────────────
+    // ── Sound Engine ──────────────────────────────────────────────────────────
     let audioCtx = null;
     function getACtx() {
       if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       if (audioCtx.state === 'suspended') audioCtx.resume();
       return audioCtx;
     }
+    function tone(freq, type, t0, dur, vol = 0.25) {
+      const ctx = getACtx(), osc = ctx.createOscillator(), g2 = ctx.createGain();
+      osc.connect(g2); g2.connect(ctx.destination); osc.type = type;
+      osc.frequency.setValueAtTime(freq, ctx.currentTime + t0);
+      g2.gain.setValueAtTime(vol, ctx.currentTime + t0);
+      g2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + t0 + dur);
+      osc.start(ctx.currentTime + t0); osc.stop(ctx.currentTime + t0 + dur + 0.01);
+    }
+    function playCoin()       { tone(988,'square',0,0.07,0.28); tone(1319,'square',0.07,0.18,0.28); }
+    function playAdd()        { tone(330,'square',0,0.04,0.15); tone(440,'square',0.04,0.06,0.12); }
+    function playCombo(c)     { const b=440+(c-2)*110; for(let i=0;i<Math.min(c-1,4);i++) tone(b+i*90,'square',i*0.07,0.09,0.2); }
+    function playLevelUp()    { [523,659,784,1047,1319].forEach((f,i)=>tone(f,'square',i*0.1,0.13,0.22)); tone(1319,'square',0.5,0.5,0.28); }
+    function playAchievement(){ [659,784,988,1319].forEach((f,i)=>tone(f,'square',i*0.09,0.11,0.2)); }
 
-    function tone(freq, type, startOffset, duration, vol = 0.25) {
-      const ctx  = getACtx();
-      const osc  = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain); gain.connect(ctx.destination);
-      osc.type = type;
-      osc.frequency.setValueAtTime(freq, ctx.currentTime + startOffset);
-      gain.gain.setValueAtTime(vol, ctx.currentTime + startOffset);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + startOffset + duration);
-      osc.start(ctx.currentTime + startOffset);
-      osc.stop(ctx.currentTime + startOffset + duration + 0.01);
+    // ── Particle Engine ───────────────────────────────────────────────────────
+    const canvas = document.getElementById('particle-canvas');
+    const ctx    = canvas.getContext('2d');
+    let particles = [];
+    function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+    window.addEventListener('resize', resizeCanvas); resizeCanvas();
+    const CC = ['#ffd700','#ffec6e','#ffc200','#ffe566','#fff8a0'];
+    const KC = ['#e8b800','#a07800','#ffe85c','#3a2800','#c49000'];
+    function explodeCard(el) { const r=el.getBoundingClientRect(); explodeAt(r.left+r.width/2, r.top+r.height/2, 28); }
+    function explodeAt(cx, cy, count) {
+      const coins = Math.floor(count*0.35);
+      for(let i=0;i<coins;i++) particles.push({type:'coin',x:cx+(Math.random()-.5)*60,y:cy,vx:(Math.random()-.5)*5,vy:-(7+Math.random()*8),size:7+Math.random()*7,color:CC[~~(Math.random()*CC.length)],alpha:1,rotation:Math.random()*Math.PI*2,rotSpeed:0.14+Math.random()*0.2,gravity:0.38});
+      for(let i=0;i<count-coins;i++){const a=Math.random()*Math.PI*2,s=3+Math.random()*9;particles.push({type:'chunk',x:cx+(Math.random()-.5)*44,y:cy+(Math.random()-.5)*20,vx:Math.cos(a)*s,vy:Math.sin(a)*s-3,size:5+Math.random()*11,color:KC[~~(Math.random()*KC.length)],alpha:1,rotation:Math.random()*Math.PI*2,rotSpeed:(Math.random()-.5)*0.3,gravity:0.3});}
+    }
+    function animateParticles() {
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      for(let i=particles.length-1;i>=0;i--){
+        const p=particles[i]; p.vy+=p.gravity; p.x+=p.vx; p.y+=p.vy; p.rotation+=p.rotSpeed; p.alpha-=0.016;
+        if(p.alpha<=0.01){particles.splice(i,1);continue;}
+        ctx.save(); ctx.globalAlpha=p.alpha;
+        if(p.type==='coin'){ctx.translate(p.x,p.y);ctx.scale(Math.abs(Math.cos(p.rotation)),1);ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(0,0,p.size,0,Math.PI*2);ctx.fill();ctx.fillStyle='rgba(255,255,200,0.5)';ctx.beginPath();ctx.arc(-p.size*.25,-p.size*.25,p.size*.35,0,Math.PI*2);ctx.fill();}
+        else{ctx.translate(p.x,p.y);ctx.rotate(p.rotation);ctx.fillStyle=p.color;ctx.fillRect(-p.size/2,-p.size/2,p.size,p.size);ctx.fillStyle='rgba(255,255,255,0.35)';ctx.fillRect(-p.size/2,-p.size/2,p.size,p.size*.28);ctx.fillRect(-p.size/2,-p.size/2,p.size*.28,p.size);}
+        ctx.restore();
+      }
+      requestAnimationFrame(animateParticles);
     }
 
-    function playCoin() {
-      tone(988,  'square', 0,    0.07, 0.28);
-      tone(1319, 'square', 0.07, 0.18, 0.28);
-    }
+    // ── Event Listeners ───────────────────────────────────────────────────────
+    // Auth tabs
+    document.getElementById('tab-login').addEventListener('click', () => {
+      document.getElementById('tab-login').classList.add('active');
+      document.getElementById('tab-signup').classList.remove('active');
+      document.getElementById('login-panel').classList.remove('hidden');
+      document.getElementById('signup-panel').classList.add('hidden');
+    });
+    document.getElementById('tab-signup').addEventListener('click', () => {
+      document.getElementById('tab-signup').classList.add('active');
+      document.getElementById('tab-login').classList.remove('active');
+      document.getElementById('signup-panel').classList.remove('hidden');
+      document.getElementById('login-panel').classList.add('hidden');
+    });
+    document.getElementById('login-btn').addEventListener('click', handleLogin);
+    document.getElementById('login-password').addEventListener('keydown', e => { if(e.key==='Enter') handleLogin(); });
+    document.getElementById('signup-btn').addEventListener('click', handleSignup);
+    document.getElementById('su-password').addEventListener('keydown', e => { if(e.key==='Enter') handleSignup(); });
+    document.getElementById('logout-btn').addEventListener('click', handleLogout);
 
-    function playAdd() {
-      tone(330, 'square', 0,    0.04, 0.15);
-      tone(440, 'square', 0.04, 0.06, 0.12);
-    }
+    // Task input
+    document.getElementById('add-btn').addEventListener('click', addTask);
+    document.getElementById('task-input').addEventListener('keydown', e => { if(e.key==='Enter') addTask(); });
 
-    function playCombo(combo) {
-      const base = 440 + (combo - 2) * 110;
-      for (let i = 0; i < Math.min(combo - 1, 4); i++)
-        tone(base + i * 90, 'square', i * 0.07, 0.09, 0.2);
-    }
+    // Due picker
+    document.querySelectorAll('.due-pill').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.due-pill').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const val = btn.dataset.val;
+        const customInput = document.getElementById('due-custom');
+        if (val === 'custom') {
+          customInput.classList.remove('hidden');
+          customInput.focus();
+          selectedDueDate = customInput.value || null;
+        } else {
+          customInput.classList.add('hidden');
+          selectedDueDate = pillToDate(val);
+        }
+      });
+    });
+    document.getElementById('due-custom').addEventListener('change', e => {
+      selectedDueDate = e.target.value || null;
+    });
 
-    function playLevelUp() {
-      const notes = [523, 659, 784, 1047, 1319];
-      notes.forEach((f, i) => tone(f, 'square', i * 0.1, 0.13, 0.22));
-      tone(1319, 'square', notes.length * 0.1, 0.5, 0.28); // hold final note
-    }
+    // Analytics toggle
+    document.getElementById('analytics-toggle').addEventListener('click', () => {
+      const panel = document.getElementById('analytics-panel');
+      const open  = !panel.classList.contains('hidden');
+      panel.classList.toggle('hidden', open);
+      document.getElementById('analytics-toggle').textContent = open ? 'STATS ▼' : 'STATS ▲';
+      if (!open) renderChart();
+    });
 
-    function playAchievement() {
-      [659, 784, 988, 1319].forEach((f, i) => tone(f, 'square', i * 0.09, 0.11, 0.2));
-    }
+    // Archive toggle
+    document.getElementById('archive-toggle').addEventListener('click', async () => {
+      const panel = document.getElementById('archive-panel');
+      const open  = !panel.classList.contains('hidden');
+      panel.classList.toggle('hidden', open);
+      document.getElementById('archive-toggle').textContent = open ? '📦 ARCHIVE ▼' : '📦 ARCHIVE ▲';
+      if (!open && !archiveState.loaded) await loadArchivePage();
+    });
+    document.getElementById('archive-load-more').addEventListener('click', loadArchivePage);
 
     // ── Boot ──────────────────────────────────────────────────────────────────
-    state.load();
-    loadG();
-    render();
-    renderHUD();
     animateParticles();
+
+    sb.auth.onAuthStateChange(async (event, session) => {
+      if (session) {
+        currentUser = session.user;
+        await syncProfile();
+        await loadTasks();
+        showScreen('app');
+      } else {
+        currentUser = null;
+        showScreen('auth');
+      }
+    });
   </script>
 </body>
 </html>
