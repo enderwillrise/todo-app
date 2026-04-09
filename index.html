@@ -377,7 +377,7 @@
   <canvas id="particle-canvas"></canvas>
 
   <!-- Loading -->
-  <div id="loading-screen"><p>LOADING...</p></div>
+  <div id="loading-screen" title="Click to continue if stuck" style="cursor:pointer"><p>LOADING...</p></div>
 
   <!-- Level Up Overlay -->
   <div id="levelup-overlay" class="hidden">
@@ -1339,13 +1339,21 @@
 
     let authResolved = false;
 
+    // Race any promise against a timeout
+    function withTimeout(p, ms) {
+      return Promise.race([p, new Promise(r => setTimeout(r, ms))]);
+    }
+
     async function bootWithSession(session) {
       if (authResolved) return;
       authResolved = true;
       if (session) {
         currentUser = session.user;
-        try { await syncProfile(); } catch(e) { console.error('syncProfile failed', e); }
-        try { await loadTasks(); }   catch(e) { console.error('loadTasks failed', e); }
+        // Hard 4-second cap on DB calls — show screen regardless
+        await withTimeout((async () => {
+          try { await syncProfile(); } catch(e) { console.error('syncProfile:', e); }
+          try { await loadTasks();   } catch(e) { console.error('loadTasks:',   e); }
+        })(), 4000);
         showScreen('app');
       } else {
         currentUser = null;
@@ -1353,28 +1361,29 @@
       }
     }
 
-    // Primary: onAuthStateChange (fires on load with current session)
+    // Primary: onAuthStateChange
     sb.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_OUT') { authResolved = false; }
+      if (event === 'SIGNED_OUT') { authResolved = false; showScreen('auth'); return; }
       await bootWithSession(session);
     });
 
-    // Fallback: direct getSession() in case listener is slow
+    // Fallback: getSession() after 800ms in case listener is slow
     setTimeout(async () => {
       if (authResolved) return;
       try {
         const { data } = await sb.auth.getSession();
         await bootWithSession(data?.session ?? null);
-      } catch(e) {
-        console.error('getSession failed', e);
-        showScreen('auth');
-      }
-    }, 1500);
+      } catch(e) { showScreen('auth'); }
+    }, 800);
 
-    // Last resort: if nothing resolved after 5s, show auth
+    // Nuclear fallback: force auth screen after 8s no matter what
     setTimeout(() => {
-      if (!authResolved) { authResolved = true; showScreen('auth'); }
-    }, 5000);
+      if (document.getElementById('loading-screen').classList.contains('hidden')) return;
+      showScreen('auth');
+    }, 8000);
+
+    // Click-to-escape on loading screen
+    document.getElementById('loading-screen').addEventListener('click', () => showScreen('auth'));
   </script>
 </body>
 </html>
