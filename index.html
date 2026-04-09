@@ -94,7 +94,8 @@
     }
     .auth-btn:hover { background: #ff4040; }
     .auth-btn:active { transform: translateY(3px); box-shadow: inset 3px 3px 0 #ff6060, inset -3px -3px 0 #8a0000, 0 2px 0 #500000; }
-    .auth-err { font-size: 0.3rem; color: #ff6060; min-height: 1rem; line-height: 1.8; }
+    .auth-err { font-size: 0.38rem; color: #ff6060; min-height: 1.2rem; line-height: 2; background: rgba(255,0,0,0.1); padding: 6px 8px; border-left: 3px solid #ff4040; display: none; }
+    .auth-err:not(:empty) { display: block; }
     .auth-busy { opacity: 0.6; pointer-events: none; }
     .pass-wrap { position: relative; }
     .pass-wrap .auth-input { padding-right: 44px; }
@@ -1126,16 +1127,23 @@
       const email = document.getElementById('login-email').value.trim();
       const pass  = document.getElementById('login-password').value;
       const errEl = document.getElementById('login-err');
+      const btn   = document.getElementById('login-btn');
       errEl.textContent = '';
       if (!email || !pass) { errEl.textContent = 'FILL IN ALL FIELDS.'; return; }
+      btn.textContent = '⏳ LOADING...';
       setAuthBusy(true);
       try {
-        const { error } = await sb.auth.signInWithPassword({ email, password: pass });
-        if (error) errEl.textContent = error.message.toUpperCase().slice(0, 80);
+        const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+        if (error) {
+          errEl.textContent = error.message.toUpperCase().slice(0, 100);
+        } else if (!data?.user) {
+          errEl.textContent = 'NO USER RETURNED. TRY AGAIN.';
+        }
       } catch(e) {
-        errEl.textContent = 'CONNECTION ERROR. CHECK INTERNET.';
+        errEl.textContent = 'CONNECTION ERROR: ' + String(e.message || e).toUpperCase().slice(0, 80);
         console.error('Login error:', e);
       }
+      btn.textContent = '▶ CONTINUE';
       setAuthBusy(false);
     }
 
