@@ -214,19 +214,19 @@
     #add-btn:active { transform: translateY(4px); box-shadow: inset 3px 3px 0 #ff6060, inset -3px -3px 0 #8a0000, 0 2px 0 #500000; }
 
     /* ── Due Picker ── */
-    #due-pill-row { display: flex; gap: 6px; margin-bottom: 18px; flex-wrap: wrap; align-items: center; }
+    #due-pill-row { display: flex; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; align-items: center; }
     .due-pill {
-      font-family: 'Press Start 2P', monospace; font-size: 0.3rem;
-      background: #0d061f; border: 2px solid #3a2870; color: #888;
-      padding: 6px 10px; cursor: pointer; white-space: nowrap;
+      font-family: 'Press Start 2P', monospace; font-size: 0.42rem;
+      background: #0d061f; border: 2px solid #3a2870; color: #aaa;
+      padding: 8px 14px; cursor: pointer; white-space: nowrap;
       transition: background 0.1s, color 0.1s;
     }
     .due-pill:hover { background: #1e1050; color: #fff; }
     .due-pill.active { background: #ffd700; color: #3a2800; border-color: #ffd700; }
     #due-custom {
-      font-family: 'Press Start 2P', monospace; font-size: 0.28rem;
+      font-family: 'Press Start 2P', monospace; font-size: 0.38rem;
       background: #5c3d1e; border: 2px solid #3a2510; color: #fff;
-      padding: 6px 8px; outline: none;
+      padding: 8px 10px; outline: none;
     }
     #due-custom:focus { border-color: #ffd700; }
 
@@ -282,8 +282,8 @@
       display: flex; flex-direction: column; gap: 5px;
       border-left: 3px solid #3a2870; padding-left: 10px; opacity: 0.85;
     }
-    .archive-text { font-size: 0.35rem; color: #ccc; text-decoration: line-through; }
-    .archive-meta { font-size: 0.26rem; color: #666; }
+    .archive-text { font-size: 0.45rem; color: #ccc; text-decoration: line-through; }
+    .archive-meta { font-size: 0.36rem; color: #888; }
     #archive-load-more {
       display: block; width: 100%; margin-top: 14px;
       font-family: 'Press Start 2P', monospace; font-size: 0.32rem;
@@ -1145,6 +1145,8 @@
       }
       btn.textContent = '▶ CONTINUE';
       setAuthBusy(false);
+      // Scroll error into view on mobile
+      if (errEl.textContent) errEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
     async function handleSignup() {
